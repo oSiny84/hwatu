@@ -1,0 +1,117 @@
+:root{color-scheme:dark;--ratio:1.5566;--card-w:63px;--back-image:none;--board-image:none;--accent:#f3ca77}*{box-sizing:border-box}body{margin:0;background:#081b17;color:#f7f3e9;font:14px system-ui,'Malgun Gothic',sans-serif;overflow:hidden}button,select{font:inherit;color:inherit;border:1px solid #ffffff4f;background:#23382f;border-radius:7px;padding:5px 8px;cursor:pointer}button:hover{border-color:var(--accent)}button:disabled{opacity:.35;cursor:default}h2{margin:0 0 12px}.hide{display:none!important}.app{width:100vw;height:100dvh;min-width:850px;display:flex;flex-direction:column;overflow:hidden}.toolbar{height:45px;flex-shrink:0;display:flex;gap:9px;align-items:center;padding:5px 13px;background:#101c1b;border-bottom:1px solid #ffffff27}.toolbar strong{color:#f3cc84;font-size:18px;margin-right:8px}.toolbar label{display:flex;align-items:center;gap:4px;font-size:12px}.toolbar select{max-width:120px}.toolbar .wallet{margin-left:auto;font-size:12px;white-space:nowrap}.board{position:relative;flex:1;min-height:0;overflow:hidden;background:linear-gradient(#001c1b66,#001c1b77),var(--board-image) center/cover no-repeat,#245d46}.strip{height:25px;display:flex;align-items:center;gap:9px;justify-content:space-between;text-shadow:0 1px 3px #000}.enemy{position:absolute;top:10px;width:39%;height:26%;min-height:120px;padding:5px 10px}.enemyA{left:1.5%}.enemyB{right:1.5%}.enemyB .enemyHand{justify-content:flex-end}.enemyB .capture{justify-content:flex-end}.enemyHand{height:51px;display:flex;gap:0;overflow:hidden}.enemyHand .card{--card-w:29px;margin-right:-9px;flex:none}.capture{height:calc(100% - 77px);display:flex;flex-direction:column;gap:2px;overflow:hidden}.capGroup{display:flex;align-items:center;gap:4px;min-height:22px}.capLabel{font-size:11px;color:#fff9;margin-right:4px;min-width:25px}.capCards{display:flex;align-items:center;flex:1;overflow:visible}.capCards img{width:23px;height:auto;aspect-ratio:1/var(--ratio);object-fit:contain;flex:none;margin-left:-6px;box-shadow:0 1px 3px #0008;border-radius:2px}.capCards img:first-child{margin-left:0}.middle{position:absolute;top:27%;left:11%;width:78%;height:38%;display:flex;flex-direction:column}.fieldHead{display:flex;justify-content:space-between;margin:0 110px 6px 5px;text-shadow:0 1px 4px #000}.field{display:flex;align-content:flex-start;justify-content:center;align-items:flex-start;gap:6px;flex-wrap:wrap;flex:1;padding:0 90px 0 0;overflow:hidden}.drawStack{position:absolute;right:0;top:28px;width:78px;display:flex;flex-direction:column;align-items:center;gap:5px}.drawStack .card{--card-w:51px}.drawStack small{font-size:11px}.card{--card-w:var(--card-size,63px);width:var(--card-w);height:auto;aspect-ratio:1/var(--ratio);border:2px solid #d8d5c9;border-radius:5px;background:#d8d0bd;position:relative;padding:0;display:block;flex:none;overflow:visible;transition:transform .12s;box-shadow:0 2px 5px #0009}.card img{display:block;width:100%;height:100%;border-radius:3px;object-fit:contain}.card.back{background:var(--back-image) center/100% 100% no-repeat,#17203c;border-color:#dfcf9b}.card.current{outline:2px solid #ffda70;outline-offset:2px}.card.matchable::after{content:'';position:absolute;width:9px;height:9px;border-radius:50%;background:#4af79f;top:-6px;right:-4px;box-shadow:0 0 6px #22f380}.card.floorTarget{outline:3px solid #5cffad}.card:hover{transform:translateY(-5px)}.card .index{position:absolute;top:-19px;left:50%;transform:translateX(-50%);font-size:12px;color:#fff;background:#123d32;border-radius:4px;padding:0 4px}.puk{position:relative;width:70px;height:95px}.puk .card{position:absolute;width:55px;top:0;left:0}.puk .card:nth-child(2){top:5px;left:8px}.puk .card:nth-child(3){top:10px;left:16px}.puk .pukLabel{position:absolute;z-index:4;bottom:-3px;right:-12px;white-space:nowrap;background:#642a22;color:#fff;border:1px solid #ffd08c;border-radius:5px;padding:2px 4px;font-size:11px}.self{position:absolute;bottom:10px;left:9%;width:82%;height:34%;display:flex;flex-direction:column;align-items:stretch}.self .capture{height:calc(100% - 139px);min-height:20px;flex:1;overflow:visible}.self .capCards img{width:28px;margin-left:-6px}.handHead{margin:2px 0 5px;height:24px}.myHand{display:flex;gap:5px;justify-content:center;padding:17px 6px 3px;overflow:visible;height:105px}.myHand .card{--card-w:var(--card-size,63px)}.message{position:absolute;left:17%;bottom:34%;max-width:68%;text-align:center;padding:6px 18px;background:#10271ac9;border:1px solid #ffffff2c;border-radius:20px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.callout{position:absolute;top:43%;left:50%;transform:translate(-50%,-50%);z-index:22;color:#ffe3a0;text-align:center;font-size:26px;font-weight:900;text-shadow:0 3px 5px #000;opacity:0;pointer-events:none}.callout.active{opacity:1}.overlay{position:absolute;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;background:#04120db8}.dialog{min-width:350px;max-width:620px;max-height:93%;overflow:auto;background:#18342d;border:2px solid #eac177;border-radius:16px;box-shadow:0 18px 65px #000c;padding:22px;text-align:center}.dialog button{margin:5px;padding:9px 15px}.dialog .focus{border:2px solid #f9d080;background:#3d543c}.dialogDetail{line-height:1.7}.actions{height:48px;flex:none;display:flex;align-items:center;gap:5px;padding:5px 10px;background:#101d1a}.actions button{white-space:nowrap}.actions #keyHelp{margin-left:auto;color:#b9d0bf;font-size:12px;white-space:nowrap}.history{position:absolute;right:5px;top:22%;max-width:290px;width:25%;max-height:65%;overflow:auto;background:#0c211de9;border:1px solid #c2a66b;color:#fff;padding:8px;z-index:20;font-size:12px}.history .logEntry{padding:4px;border-bottom:1px solid #ffffff22}.flash{animation:pulse 1.1s}@keyframes pulse{40%{box-shadow:0 0 12px 5px #f8df8e}}@media(max-height:780px){.enemy{height:27%}.middle{top:28%;height:35%}.self{height:36%;bottom:4px}.myHand{height:98px}.self .capture{height:auto}.actions{height:43px}.toolbar{height:42px}.message{bottom:36%}}@media(min-width:1600px) and (min-height:850px){:root{--card-size:80px}.myHand{height:126px}.enemyHand{height:65px}.enemyHand .card{--card-w:38px}.capCards img{width:31px}.self .capCards img{width:35px}.middle{top:27%;height:37%}.self{height:36%}}
+/* Stage 8 shared UI improvements */
+.card:disabled{opacity:1;cursor:default}.movingCard{position:fixed;z-index:40;width:52px;height:auto;aspect-ratio:1/var(--ratio);object-fit:contain;pointer-events:none;border:2px solid #f4d494;border-radius:5px;box-shadow:0 5px 18px #000a}.settingRow{display:flex;justify-content:space-between;align-items:center;gap:20px;padding:6px 10px;margin:3px 0;border-radius:6px;border:1px solid #ffffff25;font-size:13px;text-align:left;cursor:pointer}.settingRow.settingActive{background:#334c3d;border-color:#efca74}.settingRow b{color:#f9d68c}.settingPreview{display:flex;align-items:center;justify-content:center;gap:15px;margin:10px auto}.dialog{width:min(94vw,540px)}.dialog small{font-size:11px;color:#d6ddd8}
+.capCards img.fresh{outline:2px solid #ffd36e;outline-offset:1px;box-shadow:0 0 7px #ffda73}.choiceFloat{position:absolute;z-index:5;width:55px;height:auto;aspect-ratio:1/var(--ratio);object-fit:contain;left:49%;top:24%;box-shadow:0 6px 14px #000a;transform:rotate(-6deg);pointer-events:none}
+/* Single-screen playing surface: reserve independent vertical bands for floor and captures. */
+@media (min-width:850px) and (max-height:850px){
+ .middle{top:28%;height:28%}
+ .self{height:40%;bottom:0}
+ .myHand{height:115px;padding-top:18px}
+ .message{top:56.5%;bottom:auto;left:50%;transform:translateX(-50%);max-width:78%;height:30px}
+ .self .capture{min-height:82px;overflow:visible}
+ .self .capGroup{min-height:19px}
+ .self .capCards img{width:25px}
+}
+/* Stage 9: mobile layout and minimum 44px action targets, desktop unaffected. */
+.captureToggle{display:none}
+@media (pointer:coarse){button,select{touch-action:manipulation}.actions button,.dialog button,.settingRow,.captureToggle{min-height:44px}.card{touch-action:manipulation}}
+@media (max-width:849px){
+ :root{--card-size:45px}
+ html,body{width:100%;height:100%;margin:0;overflow:hidden}
+ .app{min-width:0;width:100%;height:100dvh}
+ .toolbar{height:57px;flex-wrap:wrap;gap:4px 6px;align-content:center;justify-content:center;padding:3px 5px;overflow:hidden}
+ .toolbar strong{font-size:13px;margin:0 5px 0 0}
+ .toolbar button,.toolbar select{padding:3px 5px;font-size:11px;min-height:30px}
+ .toolbar label{font-size:10px}
+ .toolbar .wallet{width:100%;margin:0;text-align:center;font-size:11px;line-height:12px}
+ .board{min-height:0;flex:1}
+ .enemy{top:2px;left:2%;height:21%;width:96%;min-height:0;padding:2px 4px}
+ .enemyB{right:1%;left:auto;width:48%}
+ .enemyA:has(~.enemyB:not(.hide)){width:48%;left:1%}
+ .strip{height:19px;font-size:11px;gap:4px}
+ .enemyHand{height:35px}
+ .enemyHand .card{--card-w:23px;margin-right:-8px}
+ .enemy .capture{height:calc(100% - 54px);gap:1px}
+ .enemy .capGroup{min-height:13px;height:13px}
+ .enemy .capLabel{font-size:9px;min-width:15px;margin:0}
+ .enemy .capCards img{width:14px;margin-left:-5px}
+ .middle{top:21%;left:2%;width:96%;height:30%}
+ .fieldHead{margin:0 45px 3px 0;font-size:11px}
+ .field{gap:3px;justify-content:flex-start;align-content:flex-start;padding:0 45px 0 0;overflow:hidden}
+ .field .card{--card-w:37px;border-width:1px}
+ .puk{width:50px;height:65px}.puk .card{width:36px}.puk .card:nth-child(2){top:3px;left:5px}.puk .card:nth-child(3){top:6px;left:10px}.puk .pukLabel{font-size:8px;bottom:-4px}
+ .drawStack{right:0;top:23px;width:43px}.drawStack .card{--card-w:36px}
+ .drawStack small{font-size:9px;text-align:center}
+ .message{top:52%;bottom:auto;left:2%;max-width:96%;width:96%;height:23px;padding:3px 7px;transform:none;font-size:11px}
+ .self{left:2%;bottom:0;width:96%;height:44%;min-height:0}
+ .self .strip{height:19px}
+ .self .capture{height:auto;min-height:0;overflow:hidden;flex:1;gap:1px}
+ .self .capGroup{height:auto;min-height:20px;flex:none}
+ .self .capCards img{width:22px}
+ .self .capLabel{font-size:10px;min-width:20px}
+ .self.captureCollapsed .capture{display:none}
+ .captureToggle{display:inline-block!important;margin-left:auto;padding:0 8px;min-height:25px;line-height:21px;font-size:10px}
+ .handHead{height:19px;margin:2px 0 1px}
+ .myHand{height:103px;min-height:90px;justify-content:flex-start;align-items:flex-end;gap:4px;padding:17px 4px 5px;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x proximity;scrollbar-width:thin;-webkit-overflow-scrolling:touch}
+ .myHand .card{--card-w:46px;min-width:46px;scroll-snap-align:center}
+ .myHand .card.current{outline:3px solid #ffdc78;outline-offset:0}
+ .card:hover{transform:none}.myHand .card:active{transform:translateY(-3px)}
+ .myHand .card .index{top:-16px;font-size:11px}
+ .actions{height:104px;min-height:104px;padding:4px;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));grid-template-rows:repeat(2,44px);gap:5px;align-content:center}
+ .actions button{height:44px;min-width:0;padding:2px;font-size:11px;white-space:normal;line-height:1.15}
+ .actions #keyHelp{display:none}
+ .dialog{min-width:0;width:min(96vw,520px);max-width:96vw;padding:12px;border-radius:12px;max-height:90%;overflow:auto}
+ .dialog button{min-width:44px;min-height:44px;padding:7px 10px;font-size:12px}
+ .dialog #dialogBtns{display:flex;flex-wrap:wrap;justify-content:center;max-height:45dvh;overflow:auto}
+ .dialog h2{font-size:18px}.settingRow{min-height:44px;padding:8px 5px}.settingPreview{max-height:70px;margin:3px auto}
+ .history{right:2%;top:20%;max-height:55%;max-width:90%;width:90%;font-size:11px}
+ .callout{font-size:22px;max-width:95%;white-space:nowrap}
+}
+@media(max-width:849px) and (orientation:landscape){
+ .toolbar{height:33px;flex-wrap:nowrap;justify-content:space-between}.toolbar strong{font-size:11px}.toolbar .wallet{width:auto;font-size:10px;white-space:nowrap}
+ .enemy{top:0;height:24%}.enemyHand{height:25px}.enemyHand .card{--card-w:18px}
+ .enemy .capture{display:none}
+ .middle{top:23%;height:37%;left:12%;width:76%}.field{gap:4px}.field .card{--card-w:32px}
+ .message{top:60%;height:21px}
+ .self{height:37%;bottom:0;left:8%;width:84%}.self .capture{max-height:34px}.self .capGroup{min-height:9px;height:10px}.self .capCards img{width:14px}.self .capLabel{font-size:8px}
+ .handHead{height:13px;font-size:10px}.myHand{height:77px;min-height:70px;padding-top:12px}.myHand .card{--card-w:40px;min-width:44px}
+ .actions{height:50px;min-height:50px;display:flex;flex-wrap:nowrap;gap:3px;padding:3px;overflow-x:auto}.actions button{min-height:44px;height:44px;flex:1;min-width:63px;font-size:10px}
+ .toolbar label{font-size:10px}.toolbar select{max-width:75px}
+}
+@media(max-width:375px) and (orientation:portrait){.myHand .card{--card-w:44px;min-width:44px}.field .card{--card-w:34px}.self .capCards img{width:20px}.actions button{font-size:10px}}
+@media(max-width:849px) and (orientation:landscape){
+ .middle{top:22%;height:31%}.message{top:53%;left:15%;width:70%;max-width:70%}
+ .self{height:44%}.self .capture{max-height:27px}.myHand{height:72px;min-height:65px}
+}
+.message{pointer-events:none}
+@media(max-width:849px) and (orientation:landscape){.message{top:47%}}
+/* Make all interactive mobile card/expand hit areas at least 44px. */
+@media(max-width:849px){
+ .field .card{--card-w:44px;min-width:44px;min-height:62px}
+ .captureToggle{min-width:44px;min-height:44px;position:relative;z-index:4;margin-top:-12px;margin-bottom:-12px}
+}
+@media(max-width:849px) and (orientation:landscape){
+ .middle{top:22%;height:34%}
+ .field{flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;justify-content:flex-start}
+ .field .card{--card-w:39px;min-width:44px;min-height:60px}
+ .puk{flex:none}
+}
+/* Stage 9.5: portrait toolbar is one usable row; the complete settings live in Esc. */
+@media (max-width:849px){
+ .toolbar{height:44px;min-height:44px;flex-wrap:nowrap;align-content:center;justify-content:space-between;overflow:visible;padding:4px 8px}
+ .toolbar strong,.toolbar label,.toolbar .wallet{display:none!important}
+ .toolbar #modeBtn,.toolbar #configBtn{display:inline-flex;align-items:center;justify-content:center;min-height:36px;padding:3px 12px;font-size:12px}
+ .captureToggle{min-height:35px;margin:0 0 0 auto;position:static;align-self:center}
+ .myHand .card .index{display:none}
+}
+@media (max-width:849px) and (orientation:landscape){
+ .toolbar{height:36px;min-height:36px}
+ /* Board region starts directly after the toolbar; show turn summary in its free toolbar center. */
+ .message{top:-32px;left:24%;width:52%;max-width:52%;height:28px;line-height:20px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;z-index:4}
+ .middle{top:22%;height:34%}
+ .captureToggle{margin:0;min-height:29px;min-width:50px;font-size:10px}
+}
+@media(max-width:849px) and (orientation:landscape){.toolbar{height:44px;min-height:44px}.message{top:-40px}}
+
+.onlineLink{font-size:12px;color:#f8d892;white-space:nowrap;text-decoration:underline;margin:0 6px}
+@media(max-width:849px){.onlineLink{font-size:11px;margin:0 2px}}

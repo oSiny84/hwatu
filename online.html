@@ -1,0 +1,13 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>화투 · 가족 온라인 대전</title><link rel="stylesheet" href="css/online.css"></head>
+<body><div class="onlineApp"><header><strong>花鬪 · 가족 온라인 대전</strong><a href="index.html">오프라인 혼자 하기</a></header>
+<section class="lobby" id="lobby"><h2>방 만들기 · 입장</h2><p>방장이 게임 상태를 관리합니다. 가족끼리 같은 일반 와이파이를 사용하는 것을 권장합니다. 방장 PC의 브라우저를 닫으면 게임이 멈춥니다.</p>
+<div class="formrow"><label>닉네임 <input id="nickname" maxlength="18" value="가족"></label><label>인원 <select id="players"><option value="3">3인 고스톱</option><option value="2">2인 맞고</option></select></label></div>
+<div class="formrow"><button id="create">방 만들기</button><button id="resume" hidden>이전 방 복구</button></div>
+<div class="formrow"><label>방 코드 <input id="roomCode" placeholder="예: AB12CD34" maxlength="8"></label><button id="join">방 입장</button></div>
+<p class="notice" id="status">온라인 기능은 인터넷 연결(초기 신호 교환용)과 HTTPS 접속이 필요합니다. 이 페이지는 배포되어 있지 않습니다.</p></section>
+<section class="room" id="room" hidden><div class="roomHead"><b id="roomTitle">방</b><span id="roomInfo">연결 준비</span><span id="timer"></span></div>
+<div class="share"><input id="shareUrl" readonly aria-label="입장 링크"><button id="copyLink">링크 복사</button></div>
+<div id="roster" class="roster"></div><div id="hostControls" class="hostControls" hidden><button data-ai="1">2번 자리 AI 사용</button><button data-ai="2">3번 자리 AI 사용</button><label>차례 제한 <select id="turnLimit"><option value="0">끔</option><option value="30">30초</option><option value="60">60초</option></select></label></div>
+<section class="game"><div id="oppArea" class="opponents"></div><div class="surface"><h3 id="turnTitle">대기 중</h3><div id="fieldArea" class="tableCards"></div><span id="pileCount" class="pileCount"></span></div><div class="selfPanel"><div id="myStats"></div><h3>내 손패</h3><div id="myHand" class="hand"></div><h3>획득패</h3><div id="captured" class="captures"></div></div></section><div id="choices" class="choices"></div><p id="logMessage" class="notice" aria-live="polite"></p>
+</section></div>
+<script src="js/manifest.js"></script><script src="js/multi-engine.js"></script><script src="js/online-core.js"></script><script src="js/peer-transport.js"></script><script src="js/online-ui.js"></script></body></html>

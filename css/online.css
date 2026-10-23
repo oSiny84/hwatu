@@ -1,0 +1,29 @@
+:root{--wood:#172e28;--light:#f3ebd9;--gold:#e9bd65}*{box-sizing:border-box}body{margin:0;min-height:100vh;background:#0b1917;color:var(--light);font-family:system-ui,'Malgun Gothic',sans-serif}.onlineApp{width:min(1260px,100%);margin:auto}header{min-height:50px;display:flex;justify-content:space-between;align-items:center;padding:9px 15px;background:#132b28}a{color:#f2d58b}button,input,select{font:inherit}button{background:#244b44;border:1px solid #7c9b88;color:white;cursor:pointer;padding:10px 14px;border-radius:9px;min-height:44px}button:disabled{opacity:.4;cursor:default}button:focus-visible{outline:2px solid gold}input,select{color:#1c2220;background:#f7f2e4;border-radius:7px;padding:9px;max-width:100%;min-height:42px}h2,h3{margin:6px 0 12px}.lobby{max-width:800px;padding:22px 18px;margin:25px auto;background:#19352d;border-radius:16px}.lobby p{line-height:1.5}.formrow{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin:15px 0}.formrow label{display:grid;gap:6px}.notice{min-height:35px;font-size:13px;padding:8px 12px;border-radius:6px;background:#122925}.room{padding:6px 12px}.roomHead,.share,.roster,.hostControls{display:flex;align-items:center;gap:9px;flex-wrap:wrap;padding:6px}.roomHead{justify-content:space-between}.share input{flex:1;min-width:180px}.seat{flex:1;min-width:140px;background:#204137;border:1px solid #385c4c;border-radius:8px;padding:10px;font-size:13px}.seat.offline{border-color:#a96250}.hostControls{border-bottom:1px solid #566f5e}.game{display:grid;grid-template-columns:1fr 1.2fr 1fr;gap:11px;margin:8px 0;min-height:450px}.opponents,.surface,.selfPanel{background:#1a3930c9;border:1px solid #527663;border-radius:12px;padding:9px;min-width:0}.surface{background-image:linear-gradient(#0b2b2788,#0b2b2788),url('../assets/boards/green.webp');background-size:cover;background-position:center}.opponent{border-bottom:1px solid #456b5f;padding:8px 0}.opponent h3{font-size:14px}.tableCards,.hand,.captures,.opponentHand{display:flex;align-items:flex-start;flex-wrap:wrap;gap:6px;min-height:58px}.tableCards{align-content:center;justify-content:center;min-height:240px}.hand{flex-wrap:nowrap;overflow-x:auto;min-height:126px;scrollbar-width:thin}.card{border:1px solid #825c39;border-radius:5px;padding:0;flex:none;width:62px;height:98px;background:#2e1211;overflow:hidden;position:relative}.card img{display:block;width:100%;height:100%;object-fit:fill}.card.back{background-image:url('../assets/backs/item-default/1.webp');background-size:100% 100%;width:34px;height:53px;cursor:default}.card.select{outline:3px solid var(--gold);outline-offset:1px}.card.matched{box-shadow:0 0 0 3px #72da84}.opponentHand{flex-wrap:nowrap}.opponent .card{margin-right:-12px}.selfPanel h3{font-size:14px;margin-top:12px}.captures .card{width:28px;height:45px;margin-right:-11px}.pileCount{display:block;text-align:right;font-size:13px}.choices{display:flex;gap:7px;flex-wrap:wrap;padding:8px;background:#183b32;border-radius:9px}.choices button{flex:1;min-width:75px}.result{padding:15px;background:#204838;border:1px solid #d3a64a;border-radius:10px;line-height:1.5}.notice.error{color:#ffc0a6}.room[hidden],.lobby[hidden]{display:none!important}@media(max-width:849px){header{font-size:14px}.room{padding:4px}.game{grid-template-columns:1fr 1fr;gap:5px;min-height:0}.opponents{grid-column:span 2;display:flex;gap:7px;padding:5px}.opponent{flex:1;min-width:0}.opponent .card{width:22px;height:35px}.surface{min-height:225px}.selfPanel{min-height:225px}.tableCards{min-height:165px;gap:2px}.surface .card{width:42px;height:66px}.hand .card{width:48px;height:76px}.captures .card{width:25px;height:40px}.choices{position:sticky;bottom:0;z-index:4}.roomHead,.share,.roster,.hostControls{padding:4px}.seat{min-width:95px;padding:6px;font-size:12px}.game h3{font-size:12px}.share input{font-size:12px}}@media(max-width:600px){.game{grid-template-columns:1fr}.opponents{grid-column:span 1}.surface{min-height:170px}.tableCards{min-height:120px}.selfPanel{min-height:185px}.choices button{min-height:48px}}
+
+/* Honor card art's own height/width ratio for front, back, table, and capture. */
+:root{--online-ratio:1.58}
+.card{height:calc(62px * var(--online-ratio))}
+.card.back{height:calc(34px * var(--online-ratio))}
+.captures .card{height:calc(28px * var(--online-ratio))}
+@media(max-width:849px){.opponent .card{height:calc(22px * var(--online-ratio))}.surface .card{height:calc(42px * var(--online-ratio))}.hand .card{height:calc(48px * var(--online-ratio))}.captures .card{height:calc(25px * var(--online-ratio))}}
+/* Room controls and choices must remain accessible at 1280×720. */
+[hidden]{display:none!important}
+@media(min-width:850px){
+ .game{height:min(390px, calc(100dvh - 360px));min-height:270px}
+ .roomHead,.share,.roster,.hostControls{padding:4px}
+ .surface,.opponents,.selfPanel{overflow:auto}
+ .tableCards{min-height:165px}
+ .choices{min-height:51px}
+}
+@media(max-width:849px){
+ .game{height:auto;min-height:0}
+ .hostControls{gap:5px}
+ .hostControls button{padding:4px 7px;font-size:11px}
+ .roster{flex-wrap:nowrap}
+ .share{padding:2px 4px}.share input{min-height:32px}.share button{min-height:36px}
+}
+@media(max-width:849px){
+ .surface .card{width:44px;min-width:44px}
+ .onlineApp{padding-bottom:58px}
+ .room .choices{position:fixed;left:0;bottom:0;width:100%;min-height:48px;max-height:140px;overflow:auto;z-index:20;box-shadow:0 -4px 16px #0008}
+}
