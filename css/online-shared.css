@@ -12,3 +12,16 @@
 
 /* Stage 10.6: room access sits between left mode and right settings on narrow devices. */
 @media(max-width:849px){.onNet{left:50%;right:auto;transform:translateX(-50%);top:1px;max-width:125px}}
+
+/* Stage 10.7: full waiting room is visible before the first game snapshot exists. */
+#onlineRoom.isWaiting .app, #onlineRoom.isWaiting .onNet{display:none}
+.onWaiting{position:absolute;inset:0;z-index:40;display:flex;justify-content:center;align-items:center;overflow-y:auto;overscroll-behavior:contain;background:linear-gradient(135deg,#10291e,#183928 65%,#061c15);color:#fff;padding:clamp(8px,3vh,24px);font-family:system-ui,sans-serif}
+.onWaitingCard{width:min(640px,100%);max-height:100%;overflow-y:auto;border-radius:18px;padding:clamp(14px,3vw,28px);background:#1c382de9;border:1px solid #cda865;box-shadow:0 10px 40px #0008;display:flex;flex-direction:column;gap:9px}
+.onWaitingHeading{text-align:center;color:#d6bd88;font-weight:600}.onWaiting h1{font-size:clamp(19px,4vw,29px);text-align:center;margin:0 0 3px}
+.onWaitingLabel{font-size:13px;opacity:.8;font-weight:600}.onWaitingCode{font:bold clamp(30px,6vw,50px) ui-monospace,monospace;letter-spacing:.13em;text-align:center;background:#091c17;border-radius:10px;padding:7px;user-select:all;color:#ffe0a0}
+.onWaitingShare{display:flex;gap:7px}.onWaitingShare input{flex:1;min-width:0;font:12px system-ui;background:#0c261c;color:#fff;border:1px solid #a7b6a2;padding:9px;border-radius:7px}.onWaiting button{font:inherit;min-height:44px;border-radius:8px;background:#315743;color:#fff;border:1px solid #c9a86e;padding:6px 11px;cursor:pointer;white-space:nowrap}
+.onWaitingRoster{display:grid;gap:6px}.onWaitingSeat{display:flex;align-items:center;gap:8px;min-height:37px;padding:5px 9px;background:#11291f;border-radius:7px}.onWaitingSeat b{flex:1;font-size:clamp(12px,3vw,16px)}.onWaitingSeat .onSeatDot{color:#c9aa66;font-weight:bold}.onWaitingSeat button{min-height:38px;font-size:13px}
+.onWaitingStatus{background:#263f2d;border-radius:8px;padding:9px 12px;text-align:center;font-weight:700;color:#fff2c9}.onWaitingHint{font-size:12px;opacity:.75;text-align:center;margin:0}
+.onNotice{position:fixed;z-index:110;left:50%;top:46%;transform:translate(-50%,-50%);width:max-content;max-width:min(90vw,560px);padding:18px 24px;border-radius:14px;text-align:center;font-size:clamp(17px,3vw,26px);font-weight:800;background:#152b24f5;border:2px solid #dfba68;color:#fff4d6;box-shadow:0 12px 40px #000b;pointer-events:none}
+#roomToggle{white-space:nowrap;min-width:max-content}
+@media (max-height:430px){.onWaiting{padding:3px}.onWaitingCard{padding:8px 14px;gap:3px}.onWaitingCode{font-size:25px;padding:3px}.onWaiting h1{font-size:17px}.onWaitingSeat{min-height:27px;padding:1px 5px}.onWaitingSeat button{min-height:30px}.onWaitingStatus{padding:4px}.onWaitingHint{display:none}}

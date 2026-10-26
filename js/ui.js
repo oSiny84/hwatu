@@ -4,6 +4,7 @@
  const load=(key,fallback)=>{try{return JSON.parse(localStorage.getItem(key))||fallback}catch(e){return fallback}};
  let opts={style:'item-default',back:'1',backCustom:false,board:'green',speed:'normal',pointWon:100,startMoney:100000,bonus:true,missions:true,aiLevels:['normal','normal'],...load('hwatu_config_v8',{})};
  let tapSelected=null, mobileCapsOpen=true;let online=document.body.dataset.online==='true',mySeat=0,onlineSnapshot=null,onlineSend=null,lastOnlineVersion=-1,onlinePaused=false,onlineQueue=[],onlineProcessing=false,onlineIdleWaiters=[],lastEnqueuedVersion=-1;let mode=2,g=null,locked=false,skip=false,focus=0,keyboardCursor=false,dlgFocus=0,menu=false,history=[],aiHandle=null,roundHistory=[],flashTimer=null,settingIndex=0,freshTaken={};
+ const subject=name=>window.HwatuOnline?.withParticle?.(name,'이/가')||name+'가';
  const names=()=>online&&onlineSnapshot?.roster?onlineSnapshot.roster.map((r,i)=>i===mySeat?'나':r.name):(mode===2?['나','컴퓨터']:['나','컴퓨터 A','컴퓨터 B']);
  const opponentSeats=()=>Array.from({length:mode},(_,i)=>i).filter(i=>i!==mySeat);
  const visualSlot=w=>w===mySeat?0:opponentSeats().indexOf(w)+1;
@@ -27,14 +28,14 @@
  const oldChoice=document.getElementById('choiceFloat');if(oldChoice)oldChoice.remove();if(v.phase==='choice'&&v.pending?.kind==='hand'&&v.pending.who===mySeat){const ghost=document.createElement('img');ghost.id='choiceFloat';ghost.className='choiceFloat';ghost.src=asset(v.pending.id);field.append(ghost)}$('fieldCount').textContent=v.field.length+'장';$('deckCount').textContent='더미 '+v.deck.length+'장';$('activeLabel').textContent=v.phase==='ended'?'종료':(names()[v.active]||'')+' 차례';
  const hand=$('hand0');hand.replaceChildren();const sortedHand=v.hands[mySeat].slice().sort((a,b)=>C[a].month-C[b].month||a-b);sortedHand.forEach((id,i)=>{const el=button(id,()=>tapCard(id),i);if(keyboardCursor&&focus===i&&v.phase==='play'&&v.active===mySeat)el.classList.add('current');if(opts.badges!==false&&id<48&&v.field.some(x=>C[x].month===C[id].month))el.classList.add('matchable');hand.append(el)});
  $('handCount').textContent=v.hands[mySeat].length+'장';$('wallet').textContent=`나 ${format(v.wallet[mySeat])}원 · ${format(opts.pointWon)}원/점`;$('hint').textContent=v.phase==='go'?'고·스톱 선택':v.phase==='choice'?'바닥 1 / 2 선택':v.phase==='cup'?'국진 1 열끗 / 2 쌍피':v.skip[mySeat]>0?'Enter · 뒤집기':'숫자키 1~9 / 0';
- const canAct=v.phase==='play'&&v.active===mySeat&&!onlinePaused;const hm=v.hands[mySeat].filter(id=>id!==null).map(id=>C[id]?.month);const canBomb=hm.some(m=>m&&hm.filter(x=>x===m).length>= (mode===2?2:3)&&v.field.filter(id=>C[id].month===m).length===(mode===2&&hm.filter(x=>x===m).length===2?2:1));const canShake=hm.some(m=>m&&hm.filter(x=>x===m).length===3&&!v.field.some(id=>C[id].month===m)&&!v.shake[mySeat].includes(m));$('bombBtn').disabled=!canAct||!canBomb;$('shakeBtn').disabled=!canAct||!canShake;$('goBtn').disabled=onlinePaused||v.phase!=='go'||v.active!==mySeat;$('stopBtn').disabled=$('goBtn').disabled;$('flipBtn').disabled=onlinePaused||v.phase!=='play'||v.active!==mySeat||v.skip[mySeat]===0&&v.hands[mySeat].length>0;$('deck').classList.toggle('flash',v.phase==='play'&&v.active===mySeat&&(v.skip[mySeat]>0||v.hands[mySeat].length===0));$('playBtn').disabled=onlinePaused||v.phase!=='play'||v.active!==mySeat;$('nextBtn').textContent=v.phase==='ended'?'Enter 다음 판':'R 새 판';$('nextBtn').disabled=online&&mySeat!==0;
+ const canAct=v.phase==='play'&&v.active===mySeat&&!onlinePaused;const hm=v.hands[mySeat].filter(id=>id!==null).map(id=>C[id]?.month);const canBomb=hm.some(m=>m&&hm.filter(x=>x===m).length>= (mode===2?2:3)&&v.field.filter(id=>C[id].month===m).length===(mode===2&&hm.filter(x=>x===m).length===2?2:1));const canShake=hm.some(m=>m&&hm.filter(x=>x===m).length===3&&!v.field.some(id=>C[id].month===m)&&!v.shake[mySeat].includes(m));$('bombBtn').disabled=!canAct||!canBomb;$('shakeBtn').disabled=!canAct||!canShake;$('goBtn').disabled=onlinePaused||v.phase!=='go'||v.active!==mySeat;$('stopBtn').disabled=$('goBtn').disabled;$('flipBtn').disabled=onlinePaused||v.phase!=='play'||v.active!==mySeat||v.skip[mySeat]===0&&v.hands[mySeat].length>0;$('deck').classList.toggle('flash',v.phase==='play'&&v.active===mySeat&&(v.skip[mySeat]>0||v.hands[mySeat].length===0));$('playBtn').disabled=onlinePaused||v.phase!=='play'||v.active!==mySeat;$('nextBtn').textContent=v.phase==='ended'?'Enter 다음 판':'R 새 판';$('nextBtn').hidden=online&&v.phase!=='ended';$('nextBtn').disabled=online&&(mySeat!==0||v.phase!=='ended');
  $('keyHelp').textContent=v.phase==='play'&&v.skip[mySeat]>0&&v.active===mySeat?'Enter · Space : 더미 뒤집기':'1~9/0 패 · ←→ Enter 선택 · G/S 고/스톱 · Esc 설정';updateHistory();touchLabels();if(!locked)showPhaseDialog();}
  function updateHistory(){$('historyBody').replaceChildren();for(const t of history.slice(0,8)){const row=document.createElement('div');row.className='logEntry';row.textContent=t;$('historyBody').append(row)}}
  function setMessage(s){$('message').textContent=s}
  function callout(s,ms=700){const el=$('callout');clearTimeout(flashTimer);el.textContent=s;el.classList.add('active');flashTimer=setTimeout(()=>el.classList.remove('active'),ms)}
  const openDialog=(title,desc,actions)=>{if(touchUI()){desc=desc.replace(/숫자 1~9, 0\(10번\), -\(11번\), =\(12번\) 또는 방향키 Enter/g,'카드를 터치해서 선택하세요').replace(/↑ ↓ 항목 이동 · ← → 값 변경 · Enter 완료/g,'항목을 터치하여 값을 변경하세요').replace(/1 또는 2를 선택하세요/g,'원하는 카드를 터치하세요');actions=actions.map(a=>({...a,text:a.text.replace(/^(?:Enter|Esc|G|S|B|H|C|R|L|1|2) · /,'')}))}const d=$('overlay');d.classList.remove('hide');$('dialogTitle').textContent=title;$('dialogDetail').innerHTML=desc;$('dialogBtns').replaceChildren();actions.forEach((a,i)=>{const b=document.createElement('button');b.textContent=a.text;b.classList.toggle('focus',i===dlgFocus);b.onclick=()=>a.fn();$('dialogBtns').append(b)});};
  const closeDialog=()=>$('overlay').classList.add('hide');
- function showPhaseDialog(){if(menu)return;const v=displayView();if(!v)return;if(v.phase==='dealer'){if(v.active!==mySeat){closeDialog();setMessage('상대가 선 정하기 패를 고르고 있습니다.');return}dlgFocus=0;const cards=Array.from({length:12},(_,i)=>({text:`${i+1}번 🎴`,fn:()=>perform({type:'dealer',player:mySeat,index:i})}));openDialog('첫 판 선 정하기','뒷면 12장 중 하나를 선택하세요. 월은 선택한 뒤 공개됩니다.<p>숫자 1~9, 0(10번), -(11번), =(12번) 또는 방향키 Enter</p>',cards);return}
+ function showPhaseDialog(){if(menu)return;const v=displayView();if(!v)return;if(v.phase==='dealer'){if(v.active!==mySeat){closeDialog();setMessage(online?`${subject(names()[v.active])} 선 정하기 패를 고르는 중입니다.`:'상대가 선 정하기 패를 고르고 있습니다.');return}dlgFocus=0;const cards=Array.from({length:12},(_,i)=>({text:`${i+1}번 🎴`,fn:()=>perform({type:'dealer',player:mySeat,index:i})}));openDialog('첫 판 선 정하기','뒷면 12장 중 하나를 선택하세요. 월은 선택한 뒤 공개됩니다.<p>숫자 1~9, 0(10번), -(11번), =(12번) 또는 방향키 Enter</p>',cards);return}
  if(v.phase==='tong'&&v.active===mySeat){openDialog('총통!','같은 월 4장 · 7점 스톱 또는 계속 ×4',[{text:'S · 총통 스톱',fn:()=>perform({type:'tong',player:mySeat,stop:true})},{text:'C · 계속',fn:()=>perform({type:'tong',player:mySeat,stop:false})}]);return}
  if(v.phase==='go'&&v.active===mySeat){const s=v.compute(mySeat);openDialog('고 · 스톱 선택',`현재 ${v.count(mySeat).total}점 · 스톱 계산 ${s.perPayer.map(x=>x.points).join(' / ')}점<br>점수 내역: ${s.breakdown.join(' · ')}<br>스톱 예상 금액: ${s.perPayer.map(x=>format(x.points*opts.pointWon)+'원').join(' / ')}<br>점당 ${format(opts.pointWon)}원 · 더미 ${v.deck.length}장<br>고 선언 시 +1점, 3고부터 배수 적용`,[{text:'G · 고',fn:()=>perform({type:'go',player:mySeat})},{text:'S · 스톱',fn:()=>perform({type:'stop',player:mySeat})}]);return}
  if(v.phase==='cup'&&v.active===mySeat){openDialog('국진 선택','9월 국진을 열끗 또는 쌍피로 분류해 주세요',[{text:'1 · 열끗',fn:()=>perform({type:'gookjin',player:mySeat,asPi:false})},{text:'2 · 쌍피',fn:()=>perform({type:'gookjin',player:mySeat,asPi:true})}]);return}
@@ -71,12 +72,12 @@
  if(action.type==='newRound')setMessage('새 판 시작');else if(info){const line=`${label}: ${info}`;history.unshift(line);history=history.slice(0,70);setMessage(line)}else setMessage(action.type==='dealer'?'선 정하기 완료':`${label}: 진행`);
  if(g.phase==='ended'){try{localStorage.setItem('hwatu_wallet_'+mode,JSON.stringify(g.wallet));localStorage.setItem('hwatu_recent_'+mode,JSON.stringify(g.records.slice(0,20)))}catch(e){}}
  if(!window.__hwatuFast&&opts.speed!=='off'&&evs.length){locked=true;closeDialog();playSequence(evs,before).catch(err=>console.error('애니메이션',err)).finally(()=>{locked=false;render();scheduleAI()})}else{render();scheduleAI()}return true}
- const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+ const sleep=ms=>new Promise(r=>setTimeout(r,online&&document.hidden?0:ms));
  async function cardFlight(id,from,to,ms,backFirst=false){if(id===undefined||id===null||!from||!to)return;const ghost=document.createElement('img');ghost.className='movingCard';ghost.src=backFirst?back():asset(id);ghost.style.left=(from.x-26)+'px';ghost.style.top=(from.y-40)+'px';$('board').append(ghost);
  const reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
- try{const anim=ghost.animate([{transform:'translate(0,0) scale(1)',opacity:.7},{transform:`translate(${to.x-from.x}px,${to.y-from.y}px) scale(1.08)`,opacity:1}],{duration:reduce?120:ms,easing:'ease-in-out',fill:'forwards'});if(backFirst){setTimeout(()=>{ghost.src=asset(id)},Math.max(20,ms*.38))}await anim.finished}catch(e){}ghost.remove();}
+ try{if(online&&document.hidden)return;const anim=ghost.animate([{transform:'translate(0,0) scale(1)',opacity:.7},{transform:`translate(${to.x-from.x}px,${to.y-from.y}px) scale(1.08)`,opacity:1}],{duration:reduce?120:ms,easing:'ease-in-out',fill:'forwards'});if(backFirst){setTimeout(()=>{if(ghost.isConnected)ghost.src=asset(id)},Math.max(20,ms*.38))}await Promise.race([anim.finished.catch(()=>{}),sleep(ms+500)]);if(anim.playState!=='finished')anim.cancel()}catch(e){}finally{ghost.remove()}}
  async function playSequence(events,before){const dur=opts.speed==='slow'?800:opts.speed==='quick'?280:500;skip=false;const center=position('#field')||position('#board');const sourceHand=w=>before.hand[w]||center;const destination=w=>before.caps[w]||center;
- for(const ev of events){if(skip)break;const ms=dur;let notice='';switch(ev.kind){
+ for(const ev of events){if(skip||(online&&document.hidden))break;const ms=dur;let notice='';switch(ev.kind){
  case 'play':notice=names()[ev.who]+' · 패 내기';await cardFlight(ev.id,sourceHand(ev.who),before.field[String(ev.id)]||center,ms,ev.who!==mySeat);break;
  case 'pair':notice=ev.source==='flip'?'뒤집어서 먹음':'낸 패로 먹음';callout(notice,ms);await sleep(ms);break;
  case 'flip':notice='더미 뒤집기';callout(notice,Math.round(ms*.8));await sleep(ms*.8);await cardFlight(ev.id,before.deck,center,ms,true);break;
@@ -113,8 +114,23 @@
  [['styleSelect','style'],['backSelect','back'],['boardSelect','board'],['speedSelect','speed']].forEach(([id,key])=>$(id).onchange=e=>themeUpdate(key,e.target.value));
  $('captureToggle').onclick=()=>{mobileCapsOpen=!mobileCapsOpen;document.querySelector('.self').classList.toggle('captureCollapsed',!mobileCapsOpen);$('captureToggle').setAttribute('aria-expanded',String(mobileCapsOpen));$('captureToggle').textContent=mobileCapsOpen?'접기':'펼치기'};$('modeBtn').onclick=online?()=>settings():switchMode;$('configBtn').onclick=settings;$('historyBtn').onclick=()=>$('history').classList.toggle('hide');$('playBtn').onclick=()=>chooseHandByIndex(focus);$('flipBtn').onclick=()=>perform({type:'flip',player:0});$('deck').onclick=()=>$('flipBtn').click();$('goBtn').onclick=()=>perform({type:'go',player:0});$('stopBtn').onclick=()=>perform({type:'stop',player:0});$('shakeBtn').onclick=()=>perform({type:'shake',player:0});$('bombBtn').onclick=()=>perform({type:'bomb',player:0});$('nextBtn').onclick=()=>g.phase==='ended'?perform({type:'newRound',player:mySeat}):online?false:startGame(mode);
  if(!online)startGame();
+ function notify(message){const msg=String(message||'').trim();if(!msg)return;history.unshift(msg);history=history.slice(0,70);setMessage(msg);updateHistory();callout(msg,1650)}
  function whenIdle(){return onlineProcessing||locked?new Promise(resolve=>onlineIdleWaiters.push(resolve)):Promise.resolve()}
- function onlineMessage(evs){const desc=evs.map(ev=>({play:`낸 패 ${C[ev.id]?.month}월`,flip:`뒤집은 패 ${C[ev.id]?.month}월`,pair:ev.source==='flip'?'뒤집어 먹음':'낸 패로 먹음',puk:'뻑! 3장 바닥',go:ev.n+'고',end:'스톱',steal:'피 빼앗기',take:ev.ids?.length?`${ev.ids.length}장 획득`:'',dealerResult:`선 정하기: 나 ${ev.mine}월 / 상대 ${ev.ai}월 → ${names()[ev.dealer]} 선`,dealerAwait:'선 정하기: 다른 참가자 선택 중'}[ev.kind])).filter(Boolean).join(' → ');if(desc){const msg=`${names()[evs[0]?.who]||'진행'}: ${desc}`;setMessage(msg);history.unshift(msg);history=history.slice(0,70)}}
+ function onlineMessage(evs,snapshot){
+  const label=w=>w===snapshot.seat?'나':snapshot.roster?.[w]?.name||`참가자 ${w+1}`;
+  let desc='';
+  for(const ev of evs){if(ev.kind==='dealerAwait'){
+    const chooser=snapshot.view?.active;
+    desc=chooser===snapshot.seat?`${subject(label(0))} 골랐습니다 · 내가 고를 차례`:`${subject(label(chooser))} 선 정하기 패를 고르는 중`;
+    break;
+   }
+   if(ev.kind==='dealerResult'){
+    desc=`선 정하기: ${label(0)} ${ev.mine}월 / ${label(1)} ${ev.ai}월 → ${label(ev.dealer)} 선`;break;
+   }
+  }
+  if(!desc){const details=evs.map(ev=>({play:`낸 패 ${C[ev.id]?.month}월`,flip:`뒤집은 패 ${C[ev.id]?.month}월`,pair:ev.source==='flip'?'뒤집어 먹음':'낸 패로 먹음',puk:'뻑! 3장 바닥',go:ev.n+'고',end:'스톱',steal:'피 빼앗기',take:ev.ids?.length?`${ev.ids.length}장 획득`:'',dealerTie:'선 정하기 동률 · 다시 고르기'}[ev.kind])).filter(Boolean).join(' → ');if(details)desc=`${label(evs.find(ev=>Number.isInteger(ev.who))?.who)}: ${details}`}
+  if(desc){setMessage(desc);history.unshift(desc);history=history.slice(0,70);updateHistory()}
+ }
  async function pumpOnline(){if(onlineProcessing)return;onlineProcessing=true;locked=true;
   try{while(onlineQueue.length){const next=onlineQueue.shift(),snapshot=next.snapshot,oldVersion=lastOnlineVersion;
    if(snapshot.version<oldVersion)continue;
@@ -123,10 +139,10 @@
    // Preserve the previous version's visible cards throughout its transition.
    // Never render a future snapshot before the earlier animation completes.
    const origins=changed?captureOrigins():null;
-   if(changed&&evs.length&&opts.speed!=='off'&&!window.__hwatuFast){await playSequence(evs,origins||captureOrigins())}
+   if(changed&&evs.length&&!next.skipAnimation&&!document.hidden&&opts.speed!=='off'&&!window.__hwatuFast){await playSequence(evs,origins||captureOrigins())}
    onlineSnapshot=snapshot;mySeat=snapshot.seat;mode=snapshot.roster?.length||mode;onlineSend=next.send;onlinePaused=!!snapshot.paused;
    g=snapshot.view?makeFacade(snapshot.view):null;
-   if(changed){onlineMessage(evs);for(const ev of evs)if(ev.kind==='take'&&ev.ids?.length)freshTaken[ev.who]=ev.ids.slice()}
+   if(changed){onlineMessage(evs,snapshot);for(const ev of evs)if(ev.kind==='take'&&ev.ids?.length)freshTaken[ev.who]=ev.ids.slice()}
    lastOnlineVersion=Math.max(lastOnlineVersion,snapshot.version);render();
   }}catch(e){console.error('온라인 연출 처리',e)}finally{onlineProcessing=false;locked=false;render();if(onlineQueue.length)pumpOnline();else onlineIdleWaiters.splice(0).forEach(resolve=>resolve())}}
  function onlineUpdate(snapshot,send){online=true;onlineSend=send;
@@ -134,8 +150,9 @@
   if(snapshot.version<lastOnlineVersion||snapshot.version<lastEnqueuedVersion)return;
   if(snapshot.version===lastEnqueuedVersion&&onlineQueue.length){onlineQueue[onlineQueue.length-1]={snapshot,send};return}
   if(snapshot.version>lastEnqueuedVersion)lastEnqueuedVersion=snapshot.version;
-  onlineQueue.push({snapshot,send});pumpOnline();
+  onlineQueue.push({snapshot,send});if(document.hidden||onlineQueue.length>3){const final=onlineQueue[onlineQueue.length-1];onlineQueue.length=0;onlineQueue.push({...final,skipAnimation:true});skip=true}pumpOnline();
  }
- window.HwatuUI={updateOnline:onlineUpdate,whenIdle,renderView:(view,seat,send,metadata={})=>onlineUpdate({...metadata,view,seat,roster:metadata.roster||Array.from({length:view.players},(_,i)=>({name:'참가자 '+(i+1)})),version:metadata.version??0},send),render:()=>render(),gameView:()=>displayView(),config:()=>opts,isLocked:()=>locked};
+ document.addEventListener('visibilitychange',()=>{if(online&&document.hidden){skip=true;for(const anim of document.getAnimations()){try{anim.cancel()}catch(e){}}}});
+ window.HwatuUI={updateOnline:onlineUpdate,whenIdle,notify,renderView:(view,seat,send,metadata={})=>onlineUpdate({...metadata,view,seat,roster:metadata.roster||Array.from({length:view.players},(_,i)=>({name:'참가자 '+(i+1)})),version:metadata.version??0},send),render:()=>render(),gameView:()=>displayView(),config:()=>opts,isLocked:()=>locked};
  window.__hwatuDev={state:()=>g,send:(action)=>perform(action),mode:(n)=>startGame(n),fast:(yes=true)=>{window.__hwatuFast=yes;opts.speed='off';render()},config:()=>opts,isLocked:()=>locked};
 })();

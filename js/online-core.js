@@ -3,6 +3,13 @@
    Only the host creates Game or reads the authoritative deck. */
 (function(root,factory){let api=factory(typeof module!=='undefined'&&module.exports?require('./multi-engine.js'):root.Hwatu);if(typeof module!=='undefined'&&module.exports)module.exports=api;if(root)root.HwatuOnline=api})(typeof window!=='undefined'?window:undefined,function(Hwatu){
  const clone=x=>JSON.parse(JSON.stringify(x));
+ // Korean particles for Hangul player names. Non-Hangul names use the no-final form.
+ function withParticle(value,pair='이/가'){
+  const name=String(value??'');const ch=name.codePointAt(name.length-1);
+  const hasFinal=ch>=0xAC00&&ch<=0xD7A3&&(ch-0xAC00)%28!==0;
+  const endings={'이/가':['이','가'],'은/는':['은','는'],'을/를':['을','를']};
+  const choices=endings[pair];return name+(choices?choices[hasFinal?0:1]:'');
+ }
  function secureToken(){let bytes;if(typeof globalThis!=='undefined'&&globalThis.crypto?.getRandomValues){bytes=new Uint8Array(16);globalThis.crypto.getRandomValues(bytes)}else if(typeof require==='function'){bytes=require('node:crypto').randomBytes(16)}else throw Error('Secure RNG unavailable');return Array.from(bytes,b=>b.toString(16).padStart(2,'0')).join('')}
  function roomCode(){return secureToken().slice(0,8).toUpperCase()}
  class MemoryEndpoint{
@@ -21,10 +28,32 @@
   setDeadline(){this.deadline=this.timeout&&this.game&&this.game.phase!=='ended'&&!this.paused?Date.now()+this.timeout*1000:0}
   attach(channel){channel.onMessage(msg=>this.receive(channel,msg));channel.onClose(()=>this.disconnect(channel))}
   receive(channel,msg){if(!msg||typeof msg!=='object'||Array.isArray(msg))return;if(msg.type==='join'){return this.join(channel,msg)}const seat=this.channels.get(channel);if(seat===undefined){channel.send({type:'reject',reason:'인증되지 않은 연결'});return}if(msg.type==='action'){const a=msg.action;if(!a||typeof a!=='object'||a.player!==seat||a.type==='newRound'&&seat!==0){channel.send({type:'reject',reason:'자리 또는 권한 불일치'});return}if(!this.act(a,seat))channel.send({type:'reject',reason:'현재 차례 또는 규칙에 맞지 않음'});return}}
-  join(channel,msg){if(msg.code!==this.code){channel.send({type:'reject',reason:'방 코드가 틀림'});return}let i=-1;const token=typeof msg.token==='string'?msg.token:'';if(token)i=this.seats.findIndex((s,j)=>j>0&&s.token===token&&!s.ai);if(i<0)i=this.seats.findIndex((s,j)=>j>0&&!s.token&&!s.ai);if(i<0){channel.send({type:'reject',reason:'빈자리가 없음'});return}const s=this.seats[i];if(s.token&&s.connected){const previous=[...this.channels].find(([,j])=>j===i);if(previous){this.channels.delete(previous[0]);previous[0].close()}}if(!s.token){s.token=secureToken();s.name=String(msg.name||`참가자 ${i}`).trim().slice(0,18)||`참가자 ${i}`}s.connected=true;this.channels.set(channel,i);channel.send({type:'welcome',seat:i,token:s.token,roomCode:this.code});this.paused=this.seats.some((seat,j)=>j>0&&seat.token&&!seat.ai&&!seat.connected);this.tryStart();this.broadcast();}
-  tryStart(){if(!this.game&&this.seats.every((s,i)=>i===0||s.ai||s.connected)){this.gameOptions.humanSeats=this.seats.flatMap((s,i)=>s.ai?[]:[i]);this.game=new Hwatu.Game(this.gameOptions);this.version++;this.setDeadline()}}
-  disconnect(channel){const i=this.channels.get(channel);if(i===undefined)return;this.channels.delete(channel);this.seats[i].connected=false;if(this.game?.phase!=='ended'){this.paused=true;this.onNotice(`${this.seats[i].name} 연결 끊김`)}this.broadcast()}
-  useAI(seat){if(!Number.isInteger(seat)||seat<=0||seat>=this.players)return false;const old=[...this.channels].find(([,i])=>i===seat);if(old)this.channels.delete(old[0]);this.seats[seat]={name:`컴퓨터 ${seat}`,token:null,ai:true,connected:true};if(this.game){this.game.options.humanSeats=(this.game.options.humanSeats||[]).filter(i=>i!==seat)}if(this.gameOptions.humanSeats)this.gameOptions.humanSeats=this.gameOptions.humanSeats.filter(i=>i!==seat);this.paused=this.seats.some((s,i)=>i>0&&s.token&&!s.ai&&!s.connected);this.tryStart();this.broadcast();return true}
+  notify(message){this.onNotice(message);for(const [channel] of this.channels)channel.send({type:'notice',message})}
+  join(channel,msg){if(msg.code!==this.code){channel.send({type:'reject',reason:'방 코드가 틀림'});return}let i=-1;const token=typeof msg.token==='string'?msg.token:'';if(token)i=this.seats.findIndex((s,j)=>j>0&&s.token===token&&!s.ai);if(i<0)i=this.seats.findIndex((s,j)=>j>0&&!s.token&&!s.ai);if(i<0){channel.send({type:'reject',reason:'빈자리가 없음'});return}const s=this.seats[i];const returning=!!s.token;if(s.token&&s.connected){const previous=[...this.channels].find(([,j])=>j===i);if(previous){this.channels.delete(previous[0]);previous[0].close()}}if(!s.token){s.token=secureToken();s.name=String(msg.name||`참가자 ${i}`).trim().slice(0,18)||`참가자 ${i}`}s.connected=true;this.channels.set(channel,i);channel.send({type:'welcome',seat:i,token:s.token,roomCode:this.code});this.paused=this.seats.some((seat,j)=>j>0&&seat.token&&!seat.ai&&!seat.connected);const started=this.tryStart();this.notify(`${withParticle(s.name)} ${returning?'다시 들어왔습니다':'들어왔습니다'} (${this.seats.filter((z,j)=>j===0||z.ai||z.connected).length}/${this.players})`);if(started)this.notify('모두 모였습니다 · 게임 시작');this.broadcast();}
+  tryStart(){if(!this.game&&this.seats.every((s,i)=>i===0||s.ai||s.connected)){this.gameOptions.humanSeats=this.seats.flatMap((s,i)=>s.ai?[]:[i]);this.game=new Hwatu.Game(this.gameOptions);this.version++;this.setDeadline();return true}return false}
+  disconnect(channel){const i=this.channels.get(channel);if(i===undefined)return;this.channels.delete(channel);this.seats[i].connected=false;if(this.game?.phase!=='ended'){this.paused=true;this.notify(`${this.seats[i].name} 연결 끊김 · 기다리는 중`)}this.broadcast()}
+  useAI(seat,{confirmKick=false}={}){
+   if(!Number.isInteger(seat)||seat<=0||seat>=this.players)return false;
+   const previous=this.seats[seat];if(previous.ai)return false;
+   // A connected human cannot be displaced by the ordinary "fill empty seat" action.
+   if(previous.connected&&!confirmKick)return false;
+   const previousName=previous.name;
+   const old=[...this.channels].find(([,i])=>i===seat)?.[0];
+   if(old){
+    // Send a terminal message before closing the transport. The guest closes it upon
+    // receipt; a host-side fallback prevents a stale connection from remaining open.
+    old.send({type:'removed',reason:'방장이 이 자리를 컴퓨터로 바꿨습니다'});
+    this.channels.delete(old);
+    setTimeout(()=>{try{old.close()}catch(e){}},900);
+   }
+   this.seats[seat]={name:`컴퓨터 ${seat}`,token:null,ai:true,connected:true};
+   if(this.game){this.game.options.humanSeats=(this.game.options.humanSeats||[]).filter(i=>i!==seat)}
+   if(this.gameOptions.humanSeats)this.gameOptions.humanSeats=this.gameOptions.humanSeats.filter(i=>i!==seat);
+   this.paused=this.seats.some((s,i)=>i>0&&s.token&&!s.ai&&!s.connected);
+   const started=this.tryStart();
+   this.notify(previous.connected?`${withParticle(previousName,'을/를')} 내보내고 ${seat+1}번 자리를 AI로 바꿨습니다`:previous.token?`${previousName} 님의 ${seat+1}번 자리를 AI로 채웠습니다`:`${seat+1}번 자리를 AI로 채웠습니다`);
+   if(started)this.notify('모두 모였습니다 · 게임 시작');this.broadcast();return true;
+  }
   act(a,actor=0){if(!this.game||this.paused)return false;if(!a||!Number.isInteger(a.player)||a.player!==actor)return false;if(a.type==='newRound'){if(actor!==0)return false} else if(a.player!==this.game.active)return false;
    const previous=this.game.toJSON();let ok=false;try{ok=this.game.dispatch(a)}catch(e){this.game=Hwatu.Game.fromJSON(previous);return false}if(!ok)return false;this.version++;this.setDeadline();this.broadcast();return true}
   timeoutStep(now=Date.now()){if(!this.timeout||!this.deadline||now<this.deadline||this.paused||!this.game||this.game.phase==='ended')return false;const a=this.game.aiAction();if(!a)return false;a.player=this.game.active;return this.act(a,a.player)}
@@ -33,10 +62,10 @@
   broadcast(){const own=this.snapshot(0);this.onState(clone(own));for(const[ch,seat]of this.channels)ch.send(this.snapshot(seat))}
  }
  class RoomClient{
-  constructor({code,name='참가자',token=null}={}){this.code=code;this.name=name;this.token=token;this.seat=null;this.view=null;this.roster=[];this.version=0;this.paused=false;this.received=[];this.onState=()=>{};this.onWelcome=()=>{};this.onReject=()=>{};this.channel=null}
-  connect(channel){this.channel=channel;channel.onMessage(m=>this.receive(m));channel.onClose(()=>{this.paused=true;this.onState(this)});channel.send({type:'join',code:this.code,name:this.name,token:this.token})}
-  receive(msg){this.received.push(clone(msg));if(msg.type==='welcome'){this.seat=msg.seat;this.token=msg.token;this.onWelcome(this);return}if(msg.type==='reject'){this.onReject(msg.reason);return}if(msg.type==='snapshot'){this.view=msg.view;this.version=msg.version;this.roster=msg.roster;this.paused=msg.paused;this.timeout=msg.timeout;this.deadline=msg.deadline;this.onState(this)}}
+  constructor({code,name='참가자',token=null}={}){this.code=code;this.name=name;this.token=token;this.seat=null;this.view=null;this.roster=[];this.version=0;this.paused=false;this.received=[];this.onState=()=>{};this.onWelcome=()=>{};this.onReject=()=>{};this.onNotice=()=>{};this.onRemoved=()=>{};this.removed=false;this.channel=null}
+  connect(channel){this.channel=channel;channel.onMessage(m=>this.receive(m));channel.onClose(()=>{if(this.removed)return;this.paused=true;this.onState(this)});channel.send({type:'join',code:this.code,name:this.name,token:this.token})}
+  receive(msg){this.received.push(clone(msg));if(msg.type==='removed'){this.removed=true;this.seat=null;this.token=null;this.view=null;this.roster=[];this.onRemoved(String(msg.reason||'방장이 이 자리를 컴퓨터로 바꿨습니다'));this.channel?.close();this.channel=null;return}if(msg.type==='welcome'){this.seat=msg.seat;this.token=msg.token;this.onWelcome(this);return}if(msg.type==='reject'){this.onReject(msg.reason);return}if(msg.type==='notice'){this.onNotice(msg.message);return}if(msg.type==='snapshot'){this.view=msg.view;this.version=msg.version;this.roster=msg.roster;this.paused=msg.paused;this.timeout=msg.timeout;this.deadline=msg.deadline;this.onState(this)}}
   act(action){if(this.seat===null||!this.channel)return false;return this.channel.send({type:'action',action:{...action,player:this.seat}})}
  }
- return{RoomHost,RoomClient,MemoryEndpoint,memoryPair,secureToken,roomCode};
+ return{RoomHost,RoomClient,MemoryEndpoint,memoryPair,secureToken,roomCode,withParticle};
 });
