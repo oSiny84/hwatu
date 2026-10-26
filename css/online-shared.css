@@ -25,3 +25,8 @@
 .onNotice{position:fixed;z-index:110;left:50%;top:46%;transform:translate(-50%,-50%);width:max-content;max-width:min(90vw,560px);padding:18px 24px;border-radius:14px;text-align:center;font-size:clamp(17px,3vw,26px);font-weight:800;background:#152b24f5;border:2px solid #dfba68;color:#fff4d6;box-shadow:0 12px 40px #000b;pointer-events:none}
 #roomToggle{white-space:nowrap;min-width:max-content}
 @media (max-height:430px){.onWaiting{padding:3px}.onWaitingCard{padding:8px 14px;gap:3px}.onWaitingCode{font-size:25px;padding:3px}.onWaiting h1{font-size:17px}.onWaitingSeat{min-height:27px;padding:1px 5px}.onWaitingSeat button{min-height:30px}.onWaitingStatus{padding:4px}.onWaitingHint{display:none}}
+
+/* 10.11: connection status stays above the table, even with the room panel closed. */
+.onConnectionBanner{position:fixed;z-index:145;left:50%;top:43%;transform:translate(-50%,-50%);width:min(520px,90vw);background:#172b28f7;border:2px solid #ecc67a;border-radius:16px;box-shadow:0 12px 40px #000b;padding:20px;color:#fff;text-align:center;font:16px system-ui}
+.onConnectionBanner h2{font-size:clamp(20px,4vw,28px);margin:0 0 14px;line-height:1.4}.onConnectionActions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}.onConnectionActions button{min-height:48px;min-width:125px;background:#315c48;border:2px solid #e3c481;color:#fff;border-radius:9px;font:bold 16px system-ui;cursor:pointer}
+#waitLeave{align-self:center;min-height:44px}

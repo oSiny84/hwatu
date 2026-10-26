@@ -2,7 +2,8 @@
 /* Online orchestration only. The actual table, cards, keyboard and animations are js/ui.js. */
 (()=>{
  const $=id=>document.getElementById(id),Online=HwatuOnline;
- let host=null,client=null,peer=null,current=null,snapshot=null,aiTimer=null,aiTicket=0,retryTimer=null,retryCount=0,reconnecting=false,manualDisconnect=false,noticeTimer=null,noticeQueue=[],noticeActive=false,latestNotice="";
+ let host=null,client=null,peer=null,current=null,snapshot=null,aiTimer=null,aiTicket=0,retryTimer=null,retryCount=0,reconnecting=false,manualDisconnect=false,noticeTimer=null,noticeQueue=[],noticeActive=false,latestNotice="",retryStartedAt=0,retryAbortTimer=null,hostLost=false;
+ const RETRY_LIMIT_MS=90000;
  const STORAGE_NAME='hwatu_online_name_v2';
  function requestAI(seat,rosterSeat){if(!host)return false;const s=rosterSeat||host.seats[seat];if(!s||s.ai)return false;
   if(s.connected){const name=s.name;const text=`${Online.withParticle(name,'을/를')} 내보내고 AI로 바꿀까요?`;
@@ -15,8 +16,14 @@
   if(peer){try{peer.destroy()}catch(e){}peer=null;}
   $('onlineRoom').hidden=true;$('onlineLobby').hidden=false;
   const notice=$('onlineNotice');notice.hidden=true;noticeQueue=[];noticeActive=false;clearTimeout(noticeTimer);
-  announce(reason||'방 연결이 종료됐습니다.',true);
+  hostLost=false;connectionBanner('');announce(reason||'방 연결이 종료됐습니다.',true);
  }
+ function summaryOfLast(s){const view=s?.view,roster=s?.roster||[];const init=s?.startingWallet||Array(roster.length).fill(100000);return {partial:true,rounds:s?.finishedRounds||Math.max(0,(view?.round||0)-(view?.phase==='ended'?0:1)),nagari:s?.nagariRounds||0,people:roster.map((r,i)=>({seat:i,name:r.name,initial:init[i]??100000,final:view?.wallet?.[i]??init[i]??100000,change:(view?.wallet?.[i]??init[i]??100000)-(init[i]??100000),recharge:r.ai?(s?.recharges?.[i]||0):0}))}}
+ function connectionBanner(message,reconnectingNow=false){const panel=$('connectionBanner');panel.hidden=!message||!snapshot?.view;if(message){$('connectionTitle').textContent=message;$('bannerReconnect').hidden=!reconnectingNow;$('bannerLeave').hidden=!reconnectingNow}}
+ function releaseHost(){++aiTicket;clearTimeout(aiTimer);const oldPeer=peer;peer=null;/* Allow terminal settlement messages to flush before PeerJS teardown. */if(oldPeer)setTimeout(()=>{try{oldPeer.destroy()}catch(e){}},1400);host=null;localStorage.removeItem('hwatu_online_host_v1');$('resume').hidden=true}
+ function finishHost(){if(!host||host.game?.phase!=='ended')return;const summary=host.finishSession();releaseHost();backToLobby('대국이 종료됐습니다.');HwatuUI.showSettlement(summary,()=>{})}
+ function leaveRoom(){if(host)return;cancelRetry();manualDisconnect=true;const c=client;if(c){c.leaveRoom();setTimeout(()=>{if(client===c)backToLobby('방에서 나갔습니다.')},1600)}else backToLobby('방에서 나갔습니다.')}
+ function giveUpReconnect(){if(!hostLost||manualDisconnect)return;const old=snapshot;cancelRetry();manualDisconnect=true;backToLobby('방장이 돌아오지 않습니다. 재접속을 중단했습니다.');if(old?.view){HwatuUI.showSettlement(summaryOfLast(old),()=>{})}}
  const normalizeCode=s=>String(s||'').trim().toUpperCase();
  function announce(msg,bad=false){$('status').textContent=msg;$('status').style.color=bad?'#ffa8a8':'';if(snapshot){$('roomInfo').textContent=msg}}
  function showNotice(message){if(!message)return;latestNotice=message;HwatuUI?.notify?.(message);noticeQueue.push(message);displayNextNotice()}
@@ -33,10 +40,11 @@
   const roster=s.roster||[];$('roomTitle').textContent=`${s.roomCode} · ${roster.length}인`;
   $('roomInfo').textContent=s.paused?'대국 일시 정지':s.view?`${roster[s.view.active]?.name||'참가자'} 차례`:'입장 기다리는 중';
   $('shareUrl').value=urlForRoom(s.roomCode);$('hostControls').hidden=!host;
-  const waiting=!s.view;$('onlineRoom').classList.toggle('isWaiting',waiting);$('waitingRoom').hidden=!waiting;if(waiting)populateWaiting(s);
+  const waiting=!s.view;$('waitLeave').hidden=!!host;$('onlineRoom').classList.toggle('isWaiting',waiting);$('waitingRoom').hidden=!waiting;if(waiting)populateWaiting(s);
 
   $('roster').replaceChildren();for(let i=0;i<roster.length;i++){const r=roster[i],row=document.createElement('div');row.textContent=`${i+1}번 ${r.name} ${r.ai?'(AI)':r.connected?'●':'○'} ${s.seat===i?'· 나':''}`;$('roster').append(row)}
   for(const b of $('hostControls').querySelectorAll('[data-ai]')){const i=Number(b.dataset.ai);if(i>=roster.length){b.hidden=true;continue}b.hidden=roster[i].ai;b.textContent=roster[i].connected?`${i+1}번 ${roster[i].name} AI로 교체…`:`${i+1}번 자리 AI 사용`;b.disabled=false}
+  if(!hostLost){const disconnected=roster.find((r,i)=>i>0&&!r.ai&&!r.connected);connectionBanner(!waiting&&s.paused&&disconnected?(s.pauseNotice||`${disconnected.name} 연결 끊김 · 기다리는 중`):'',false);const fill=$('bannerFillAI');if(fill){fill.hidden=!(host&&!waiting&&s.paused&&disconnected);if(!fill.hidden){const seat=roster.indexOf(disconnected);fill.textContent=`${seat+1}번 자리 AI로 채우기`;fill.onclick=()=>requestAI(seat,disconnected)}}}
   if(s.view){HwatuUI.updateOnline(s,action=>host?host.act(action,0):client?.act(action));}
  }
  function saveHost(){if(host){try{localStorage.setItem('hwatu_online_host_v1',JSON.stringify(host.exportSession()))}catch(e){announce('브라우저 저장소 사용 불가',true)}}}
@@ -50,17 +58,23 @@
  function newHost(saved){host=saved?Online.RoomHost.fromSession(saved):new Online.RoomHost({players:Number($('players').value),name:saveName()});host.onState=onHostState;host.onNotice=msg=>showNotice(msg);return host}
  async function createRoom(resume=false){try{cancelRetry();announce('방을 연결하고 있습니다...');const saved=resume?JSON.parse(localStorage.getItem('hwatu_online_host_v1')):null;const h=newHost(saved);peer=await HwatuPeer.openHost(h.code,ch=>h.attach(ch));$('roomCode').value=h.code;$('turnLimit').value=String(h.timeout);h.broadcast();announce(`방 ${h.code} 생성 완료`)}catch(e){host=null;announce('방 만들기 실패: '+e.message,true)}}
  const getSaved=(code)=>{try{return JSON.parse(localStorage.getItem('hwatu_online_seat_'+code)||'null')}catch(e){return null}};
- function scheduleRetry(){if(manualDisconnect||host||retryTimer||!current)return;const delay=Math.min(9000,1800+retryCount*1400);retryCount++;announce('방장 연결 끊김 · 다시 연결 중');retryTimer=setTimeout(()=>{retryTimer=null;joinRoom(true)},delay)}
- function cancelRetry(){clearTimeout(retryTimer);retryTimer=null;retryCount=0;reconnecting=false}
+ function scheduleRetry(){if(manualDisconnect||host||!current)return;
+  if(!hostLost){hostLost=true;retryStartedAt=Date.now();clearTimeout(retryAbortTimer);retryAbortTimer=setTimeout(giveUpReconnect,RETRY_LIMIT_MS)}
+  connectionBanner('방장 연결이 끊겼습니다 · 다시 연결 중…',true);
+  if(Date.now()-retryStartedAt>=RETRY_LIMIT_MS){giveUpReconnect();return}
+  if(retryTimer)return;
+  const delay=Math.min(9000,1800+retryCount*1400,RETRY_LIMIT_MS-(Date.now()-retryStartedAt));retryCount++;announce('방장 연결 끊김 · 다시 연결 중');retryTimer=setTimeout(()=>{retryTimer=null;joinRoom(true)},delay)}
+ function cancelRetry(){clearTimeout(retryTimer);clearTimeout(retryAbortTimer);retryTimer=null;retryAbortTimer=null;retryCount=0;reconnecting=false;retryStartedAt=0;hostLost=false;connectionBanner('')}
  async function joinRoom(auto=false){const code=normalizeCode($('roomCode').value);if(!/^[0-9A-F]{8}$/.test(code)){if(!auto)announce('방 코드 8자리를 입력하세요.',true);return}if(reconnecting)return;reconnecting=true;current=code;manualDisconnect=false;saveName();if(!auto)announce('방에 접속하는 중...');
-  try{const connection=await HwatuPeer.openGuest(code);const oldPeer=peer;peer=connection.peer;if(oldPeer&&oldPeer!==peer){try{oldPeer.destroy()}catch(e){}}
+  try{const connection=await Promise.race([HwatuPeer.openGuest(code),new Promise((_,reject)=>setTimeout(()=>reject(Error('연결 시간 초과')),10000))]);if(manualDisconnect||current!==code){try{connection.channel.close();connection.peer.destroy()}catch(_){}return}const oldPeer=peer;peer=connection.peer;if(oldPeer&&oldPeer!==peer){try{oldPeer.destroy()}catch(e){}}
    const saved=getSaved(code);client=new Online.RoomClient({code,name:$('nickname').value.trim()||'가족',token:saved?.token||null});const currentClient=client;
    client.onWelcome=c=>{if(c!==client)return;const returning=!!saved?.token;localStorage.setItem('hwatu_online_seat_'+code,JSON.stringify({token:c.token,seat:c.seat,name:$('nickname').value.trim()}));cancelRetry();announce(`${c.seat+1}번 자리로 ${returning?'재입장':'입장'}했습니다.`)};
-   client.onState=c=>{if(c!==client)return;if(!c.view&&c.paused){scheduleRetry();return}renderRoom({roomCode:code,seat:c.seat,view:c.view,version:c.version,roster:c.roster,paused:c.paused,timeout:c.timeout,deadline:c.deadline})};
+   client.onState=c=>{if(c!==client)return;if(!c.channel){scheduleRetry();return}renderRoom({roomCode:code,seat:c.seat,view:c.view,version:c.version,roster:c.roster,paused:c.paused,timeout:c.timeout,deadline:c.deadline,startingWallet:c.startingWallet,finishedRounds:c.finishedRounds,nagariRounds:c.nagariRounds,pauseNotice:c.pauseNotice,recharges:c.recharges})};
    client.onNotice=msg=>{if(client!==currentClient)return;showNotice(msg)};
-       client.onRemoved=reason=>{if(client!==currentClient)return;localStorage.removeItem('hwatu_online_seat_'+code);backToLobby(reason)};
+       client.onSessionEnded=summary=>{if(client!==currentClient)return;localStorage.removeItem('hwatu_online_seat_'+code);backToLobby('방장이 대국을 종료했습니다.');HwatuUI.showSettlement(summary,()=>{})};
+   client.onRemoved=reason=>{if(client!==currentClient)return;localStorage.removeItem('hwatu_online_seat_'+code);backToLobby(reason)};
    client.onReject=reason=>{announce('입장 거부: '+reason,true);if(/빈자리|코드/.test(reason))manualDisconnect=true;else scheduleRetry()};
-   connection.channel.onClose(()=>{if(currentClient!==client)return;scheduleRetry()});
+   connection.channel.onClose(()=>{if(currentClient!==client||manualDisconnect||currentClient.removed)return;scheduleRetry()});
    client.connect(connection.channel);
   }catch(e){announce('방장 연결 끊김 · 다시 연결 중 ('+e.message+')',true);scheduleRetry()}finally{reconnecting=false}
  }
@@ -71,6 +85,7 @@
  $('reconnect').onclick=()=>{cancelRetry();joinRoom(false)};$('onlineReconnect').onclick=()=>{cancelRetry();if(host)host.broadcast();else joinRoom(false)};
  async function copyRoomLink(){const input=$('waitingRoom').hidden?$('shareUrl'):$('waitLink');try{await navigator.clipboard.writeText(input.value);announce('입장 링크 복사 완료')}catch(e){input.focus();input.select();try{document.execCommand('copy')}catch(_){}announce('입장 링크가 선택되었습니다. 복사해 주세요.')}}
  $('waitCopy').onclick=copyRoomLink;
+ $('waitLeave').onclick=leaveRoom; $('bannerReconnect').onclick=()=>{clearTimeout(retryTimer);retryTimer=null;if(!reconnecting)joinRoom(true)}; $('bannerLeave').onclick=leaveRoom;
  $('copyLink').onclick=copyRoomLink;
  $('roomToggle').onclick=()=>{const e=$('roomExpanded');e.hidden=!e.hidden;$('roomToggle').setAttribute('aria-expanded',String(!e.hidden))};
  $('hostControls').querySelectorAll('[data-ai]').forEach(b=>b.onclick=()=>requestAI(Number(b.dataset.ai)));
@@ -78,5 +93,6 @@
  setInterval(()=>{host?.timeoutStep();const d=snapshot?.deadline;$('timer').textContent=d&&snapshot?.timeout?`${Math.max(0,Math.ceil((d-Date.now())/1000))}초`:''},1000);
  try{if(JSON.parse(localStorage.getItem('hwatu_online_host_v1')||'null')?.code)$('resume').hidden=false}catch(e){}
  if(fromUrl&&getSaved(fromUrl)?.token){announce('저장된 자리로 자동 재접속 중');setTimeout(()=>joinRoom(true),50)}
- window.__hwatuOnlineDev={host:()=>host,client:()=>client,state:()=>snapshot,render:()=>renderRoom(snapshot),join:joinRoom};
+ HwatuUI.setSessionHandlers({finish:finishHost,leave:leaveRoom});
+ window.__hwatuOnlineDev={host:()=>host,client:()=>client,state:()=>snapshot,render:()=>renderRoom(snapshot),join:joinRoom,retryGiveUp:giveUpReconnect,expireRetry:()=>{retryStartedAt=Date.now()-RETRY_LIMIT_MS;scheduleRetry()},retryState:()=>({retryStartedAt,hostLost,manualDisconnect}),leave:leaveRoom,finish:finishHost};
 })();

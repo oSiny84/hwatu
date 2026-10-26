@@ -179,3 +179,13 @@
  .enemyB .enemyHand{justify-content:flex-start;padding-right:4px}
  .enemyB .enemyHand .card:last-child{margin-right:0}
 }
+
+/* 10.11: a session-wide, accessible cash-out screen. */
+.sessionSettlement{position:fixed;inset:0;z-index:210;background:#061a15f5;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:16px;overflow-y:auto;font:16px system-ui,sans-serif}
+.sessionSettlement h2{font-size:clamp(26px,5vw,42px);margin:0;color:#f4db9e}.sessionCount{margin:0 0 6px;color:#ddd}
+.sessionPerson{width:min(540px,100%);border:1px solid #ac985c;background:#17392b;border-radius:12px;padding:12px 16px;display:grid;grid-template-columns:1fr auto;gap:5px 12px;align-items:center}
+.sessionPerson b{font-size:clamp(17px,3vw,22px)}.sessionPerson span{font-size:13px;opacity:.9;text-align:right}.sessionChange{grid-column:1/-1;font-size:clamp(22px,4vw,32px);text-align:right}.sessionChange.win{color:#a5efd2}.sessionChange.loss{color:#ffb4ad}
+.sessionSettlement>button{min-height:48px;padding:9px 24px;border-radius:8px;background:#395c40;border:2px solid #edcf89;color:#fff;font:bold 18px system-ui;cursor:pointer}
+.sessionSettlement[hidden]{display:none!important}
+
+.sessionRecharge{grid-column:1/-1;color:#ffe2a0;text-align:right;font-size:12px}
