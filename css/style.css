@@ -115,3 +115,67 @@
 
 .onlineLink{font-size:12px;color:#f8d892;white-space:nowrap;text-decoration:underline;margin:0 6px}
 @media(max-width:849px){.onlineLink{font-size:11px;margin:0 2px}}
+
+/* Stage 10.9 — centered desktop game surface and per-seat identity blocks. */
+@media (min-width:850px){
+ .app{max-width:1600px;margin-inline:auto}
+ .enemyB .enemyHand{padding-right:4px}
+ .enemyB .enemyHand .card:last-child{margin-right:0}
+ .playerIdentity{display:inline-flex;align-items:center;justify-content:flex-start;gap:12px;max-width:100%;border:1px solid #e2c17b55;padding:5px 10px;border-radius:12px;background:#092a22cc}
+ .playerIdentity strong[id^="name"]{font-size:clamp(18px,1.25vw,22px);white-space:nowrap}
+ .playerStats{display:inline-flex;align-items:baseline;gap:12px;white-space:nowrap;font-size:18px}
+ .moneyValue{color:#ffdf92;font-size:clamp(19px,1.5vw,25px);font-weight:900}
+ .playerIdentitySelf .moneyValue{font-size:clamp(24px,2vw,32px)}
+ .self>.strip{height:auto;min-height:45px;justify-content:flex-start;gap:10px}
+ .self .captureLabel{font-size:12px;color:#d5dccf;font-weight:500}
+ .middle{overflow:visible}
+ .middle .fieldHead #activeLabel{position:absolute;z-index:7;left:50%;top:-8px;transform:translateX(-50%);font-size:clamp(24px,2.15vw,34px);font-weight:900;white-space:nowrap;color:#fff4c8;text-shadow:0 2px 7px #000;background:#133e2dE8;border:2px solid #f8d084;border-radius:15px;padding:3px 19px;box-shadow:0 3px 20px #0007;pointer-events:none}
+ .middle .field{padding-top:34px}
+}
+.playerIdentity.turnActive{outline:2px solid #ffe18c;box-shadow:0 0 19px 3px #ffc35680;background:#33533c}
+.walletDelta{font-weight:900;font-size:20px;color:#ffa9aa;opacity:0;pointer-events:none;transition:opacity .16s;white-space:nowrap}
+.walletDelta.gain{color:#9fffad}.walletDelta.visible{opacity:1;animation:walletPulse .55s ease-out}
+@keyframes walletPulse{0%{transform:scale(.7)}60%{transform:scale(1.15)}100%{transform:scale(1)}}
+@media(max-width:849px){
+ .playerIdentity{display:inline-flex;align-items:center;gap:4px;max-width:100%;border-radius:5px;padding:1px 3px}
+ .playerIdentity strong[id^="name"]{font-size:11px}
+ .playerStats{display:inline-flex;align-items:baseline;gap:4px;font-size:11px;white-space:nowrap}
+ .playerStats .moneyValue{font-size:12px;color:#ffe0a0}
+ .playerIdentitySelf .moneyValue{font-size:14px}
+ .self .strip{gap:4px}
+ .self .captureLabel{display:none}
+ .walletDelta{font-size:10px}
+ .middle .fieldHead #activeLabel{position:absolute;z-index:4;top:-1px;left:50%;transform:translateX(-50%);font-weight:900;font-size:clamp(13px,3vw,18px);white-space:nowrap;color:#ffe8ac;background:#143b2eee;border-radius:7px;padding:1px 7px;max-width:70%;overflow:hidden;text-overflow:ellipsis;pointer-events:none}
+ .middle .field{padding-top:18px}
+}
+
+/* 10.9 seating refinement: money sits immediately beside the corresponding hand. */
+@media(min-width:850px){
+ .enemyB .enemyHand,.enemyB .capture{justify-content:flex-start}
+ .self .handHead{height:auto;min-height:51px;justify-content:center;gap:14px;flex-shrink:0}
+ .self .captureLabel{font-weight:650;font-size:13px}
+ .self .handLabel{font-size:13px;font-weight:500;white-space:nowrap}
+ .board>.message{top:59%;bottom:auto;left:50%;transform:translateX(-50%)}
+}
+@media(max-width:849px){
+ .self .captureLabel{display:inline}
+ .self .handHead{height:31px;min-height:31px;gap:4px;justify-content:flex-start}
+ .self .handLabel{font-size:10px;white-space:nowrap}
+ .self .handHead #hint{display:none}
+}
+@media(max-width:849px) and (orientation:landscape){.self .handHead{height:25px;min-height:25px}.self .playerIdentitySelf .moneyValue{font-size:12px}}
+/* Keep the full card height inside the 1280×720 board after moving the wallet to the hand heading. */
+@media (min-width:850px) and (max-height:780px){
+ .self{height:44%;bottom:4px}
+ .self>.strip:not(.handHead){height:24px;min-height:24px;flex-shrink:0}
+ .self .handHead{min-height:45px}
+ .self .myHand{height:109px;min-height:109px;flex-shrink:0}
+}
+
+/* Stage 10.10 (issue 83): keep the right opponent's back cards attached to
+   their nameplate on phones as well as desktops. The former flex-end layout
+   pushed the last card 8px outside its seat at widths <= 849px. */
+@media (max-width:849px){
+ .enemyB .enemyHand{justify-content:flex-start;padding-right:4px}
+ .enemyB .enemyHand .card:last-child{margin-right:0}
+}
