@@ -59,7 +59,7 @@
  async function createRoom(resume=false){try{cancelRetry();announce('방을 연결하고 있습니다...');const saved=resume?JSON.parse(localStorage.getItem('hwatu_online_host_v1')):null;const h=newHost(saved);peer=await HwatuPeer.openHost(h.code,ch=>h.attach(ch));$('roomCode').value=h.code;$('turnLimit').value=String(h.timeout);h.broadcast();announce(`방 ${h.code} 생성 완료`)}catch(e){host=null;announce('방 만들기 실패: '+e.message,true)}}
  const getSaved=(code)=>{try{return JSON.parse(localStorage.getItem('hwatu_online_seat_'+code)||'null')}catch(e){return null}};
  function scheduleRetry(){if(manualDisconnect||host||!current)return;
-  if(!hostLost){hostLost=true;retryStartedAt=Date.now();clearTimeout(retryAbortTimer);retryAbortTimer=setTimeout(giveUpReconnect,RETRY_LIMIT_MS)}
+  if(!hostLost){hostLost=true;window.HwatuSfx?.play('disconnect');retryStartedAt=Date.now();clearTimeout(retryAbortTimer);retryAbortTimer=setTimeout(giveUpReconnect,RETRY_LIMIT_MS)}
   connectionBanner('방장 연결이 끊겼습니다 · 다시 연결 중…',true);
   if(Date.now()-retryStartedAt>=RETRY_LIMIT_MS){giveUpReconnect();return}
   if(retryTimer)return;

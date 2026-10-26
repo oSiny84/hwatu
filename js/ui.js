@@ -2,7 +2,7 @@
 (()=>{
  const $=id=>document.getElementById(id), C=Hwatu.card, STYLE={"item-default":"전통","item-2":"전통 위트","item-3":"네온"},BACK=['','빨강','무광 검정','남금','비단','빈티지','홀로그램'];
  const load=(key,fallback)=>{try{return JSON.parse(localStorage.getItem(key))||fallback}catch(e){return fallback}};
- let opts={style:'item-default',back:'1',backCustom:false,board:'green',speed:'normal',pointWon:100,startMoney:100000,bonus:true,missions:true,aiLevels:['normal','normal'],...load('hwatu_config_v8',{})};
+ let opts={style:'item-default',back:'1',backCustom:false,board:'green',speed:'normal',pointWon:100,startMoney:100000,bonus:true,missions:true,aiLevels:['normal','normal'],sound:true,soundVolume:'mid',...load('hwatu_config_v8',{})};
  let tapSelected=null, mobileCapsOpen=true;let online=document.body.dataset.online==='true',mySeat=0,onlineSnapshot=null,onlineSend=null,lastOnlineVersion=-1,onlinePaused=false,onlineQueue=[],onlineProcessing=false,onlineIdleWaiters=[],lastEnqueuedVersion=-1;let mode=2,g=null,locked=false,skip=false,focus=0,keyboardCursor=false,dlgFocus=0,menu=false,history=[],aiHandle=null,roundHistory=[],flashTimer=null,settingIndex=0,freshTaken={},walletSeen=null,walletFlashTimers=[null,null,null],previousTurnKey=null,pendingTurnCallout=null;
  let offlineStartWallet=null,sessionHandlers={finish:null,leave:null},settlementVisible=false,settlementClose=null,settlementInert=[],confirmOpen=false;
  const subject=name=>window.HwatuOnline?.withParticle?.(name,'이/가')||name+'가';
@@ -25,13 +25,13 @@
  function showMoney(slot,w,view){const score=$('score'+slot);if(!score)return;score.replaceChildren();const pts=document.createElement('span');pts.className='scorePoints';pts.textContent=view.count(w).total+'점';const cash=document.createElement('strong');cash.className='moneyValue';cash.textContent=format(view.wallet[w])+'원';score.append(cash,pts)}
  function updateWalletFlashes(v){const key=(online?'online-':'offline-')+mode+'-'+mySeat;
   if(!walletSeen||walletSeen.key!==key||walletSeen.amounts.length!==v.wallet.length){walletSeen={key,amounts:v.wallet.slice()};return}
-  for(let w=0;w<mode;w++){const diff=v.wallet[w]-walletSeen.amounts[w];if(!diff)continue;const slot=visualSlot(w),el=$('walletDelta'+slot);if(!el)continue;clearTimeout(walletFlashTimers[slot]);el.textContent=(diff>0?'+':'−')+format(Math.abs(diff))+'원';el.classList.toggle('gain',diff>0);el.classList.add('visible');walletFlashTimers[slot]=setTimeout(()=>el.classList.remove('visible'),2400)}walletSeen.amounts=v.wallet.slice();}
+  let moved=false;for(let w=0;w<mode;w++){const diff=v.wallet[w]-walletSeen.amounts[w];if(!diff)continue;moved=true;const slot=visualSlot(w),el=$('walletDelta'+slot);if(!el)continue;clearTimeout(walletFlashTimers[slot]);el.textContent=(diff>0?'+':'−')+format(Math.abs(diff))+'원';el.classList.toggle('gain',diff>0);el.classList.add('visible');walletFlashTimers[slot]=setTimeout(()=>el.classList.remove('visible'),2400)}if(moved)sfx('money',250);walletSeen.amounts=v.wallet.slice();}
  function updateTurnDisplay(v){for(let slot=0;slot<3;slot++)$('playerInfo'+slot)?.classList.remove('turnActive');const name=names()[v.active]||'참가자';$('activeLabel').textContent=v.phase==='ended'?'대국 종료':name+' 차례';
   if(v.phase!=='ended')$('playerInfo'+visualSlot(v.active))?.classList.add('turnActive');
   const key=v.phase==='play'?mode+'-'+v.active:null;
   if(key&&previousTurnKey!==null&&key!==previousTurnKey)pendingTurnCallout=name+' 차례';
   if(key)previousTurnKey=key;
-  if(!locked&&pendingTurnCallout){callout(pendingTurnCallout,850);pendingTurnCallout=null;}
+  if(!locked&&pendingTurnCallout){callout(pendingTurnCallout,850);if(v.active===mySeat)sfx('turn');pendingTurnCallout=null;}
  }
  function render(){clearLanded();if(!g)return;const v=displayView();if(!v)return;applyTheme();$('modeBtn').textContent=mode===2?(touchUI()?'2인 맞고':'2인 맞고 (M 전환)'):(touchUI()?'3인 고스톱':'3인 고스톱 (M 전환)');$('name1').textContent=names()[opponentSeats()[0]]||'컴퓨터';$('enemyB').classList.toggle('hide',mode===2);
  showMoney(0,mySeat,v);
@@ -45,10 +45,10 @@
  function updateHistory(){$('historyBody').replaceChildren();for(const t of history.slice(0,8)){const row=document.createElement('div');row.className='logEntry';row.textContent=t;$('historyBody').append(row)}}
  function setMessage(s){$('message').textContent=s}
  function callout(s,ms=700){const el=$('callout');clearTimeout(flashTimer);el.textContent=s;el.classList.add('active');flashTimer=setTimeout(()=>el.classList.remove('active'),ms)}
- const openDialog=(title,desc,actions)=>{const prev=document.activeElement;const oldIndex=prev?.closest('#dialogBtns')?Array.from($('dialogBtns').children).indexOf(prev):-1;const wasHidden=$('overlay').classList.contains('hide');if(touchUI()){desc=desc.replace(/숫자 1~9, 0\(10번\), -\(11번\), =\(12번\) 또는 방향키 Enter/g,'카드를 터치해서 선택하세요').replace(/↑ ↓ 항목 이동 · ← → 값 변경 · Enter 완료/g,'항목을 터치하여 값을 변경하세요').replace(/1 또는 2를 선택하세요/g,'원하는 카드를 터치하세요');actions=actions.map(a=>({...a,text:a.text.replace(/^(?:Enter|Esc|G|S|B|H|C|R|L|1|2) · /,'')}))}const d=$('overlay');d.classList.remove('hide');$('dialogTitle').textContent=title;$('dialogDetail').innerHTML=desc;$('dialogBtns').replaceChildren();actions.forEach((a,i)=>{const b=document.createElement('button');b.textContent=a.text;b.classList.toggle('focus',i===dlgFocus);b.onclick=()=>a.fn();$('dialogBtns').append(b)});const btns=Array.from($('dialogBtns').querySelectorAll('button'));if(btns.length&&(wasHidden||oldIndex>=0)){dlgFocus=Math.min(Math.max(0,oldIndex),btns.length-1);btns[dlgFocus].focus({preventScroll:true})}};
+ const openDialog=(title,desc,actions)=>{const prev=document.activeElement;const oldIndex=prev?.closest('#dialogBtns')?Array.from($('dialogBtns').children).indexOf(prev):-1;const wasHidden=$('overlay').classList.contains('hide');if(touchUI()){desc=desc.replace(/숫자 1~9, 0\(10번\), -\(11번\), =\(12번\) 또는 방향키 Enter/g,'카드를 터치해서 선택하세요').replace(/↑ ↓ 항목 이동 · ← → 값 변경 · Enter 완료/g,'항목을 터치하여 값을 변경하세요').replace(/1 또는 2를 선택하세요/g,'원하는 카드를 터치하세요');actions=actions.map(a=>({...a,text:a.text.replace(/^(?:Enter|Esc|G|S|B|H|C|R|L|1|2) · /,'')}))}const d=$('overlay');d.classList.remove('hide');$('dialogTitle').textContent=title;$('dialogDetail').innerHTML=desc;$('dialogBtns').replaceChildren();actions.forEach((a,i)=>{const b=document.createElement('button');b.textContent=a.text;b.classList.toggle('focus',i===dlgFocus);b.onclick=()=>{sfx('button');a.fn()};$('dialogBtns').append(b)});const btns=Array.from($('dialogBtns').querySelectorAll('button'));if(btns.length&&(wasHidden||oldIndex>=0)){dlgFocus=Math.min(Math.max(0,oldIndex),btns.length-1);btns[dlgFocus].focus({preventScroll:true})}};
  const closeDialog=()=>$('overlay').classList.add('hide');
  function showSettlement(summary,onClose){
-  closeDialog();settlementVisible=true;settlementClose=null;
+  closeDialog();settlementVisible=true;settlementClose=null;sfx('settle');
   let panel=$('sessionSettlement');if(!panel){panel=document.createElement('section');panel.id='sessionSettlement';panel.className='sessionSettlement';panel.setAttribute('role','dialog');panel.setAttribute('aria-modal','true');document.body.append(panel)}
   panel.replaceChildren();panel.hidden=false;settlementInert=Array.from(document.body.children).filter(e=>e!==panel).map(e=>[e,e.inert]);for(const [e] of settlementInert)e.inert=true;
   const title=document.createElement('h2');title.textContent=summary.partial?'잠정 정산 · 마지막 수신 기준':'최종 정산';panel.append(title);
@@ -72,6 +72,8 @@
   {label:'카드 뒷면',get:()=>opts.back+' '+BACK[+opts.back],values:['1','2','3','4','5','6'],key:'back'},
   {label:'화투판',get:()=>opts.board==='green'?'녹색':'남색',values:['green','navy'],key:'board'},
   {label:'애니메이션',get:()=>({slow:'느림',normal:'보통',quick:'빠름',off:'끔'})[opts.speed],values:['slow','normal','quick','off'],key:'speed'},
+  {label:'소리',get:()=>opts.sound===false?'끔':'켬',values:[true,false],key:'sound'},
+  {label:'소리 크기',get:()=>({low:'작게',mid:'보통',high:'크게'})[opts.soundVolume]||'보통',values:['low','mid','high'],key:'soundVolume'},
   {label:'점당 금액',get:()=>format(opts.pointWon)+'원',values:[10,50,100,500,1000,5000,10000],key:'pointWon'},
   {label:'패 매칭 표시',get:()=>opts.badges===false?'끔':'켬',values:[true,false],key:'badges'},
   {label:'컴퓨터 A 난이도',get:()=>opts.aiLevels[0],values:['easy','normal','hard'],key:'ai0'},
@@ -80,7 +82,7 @@
   {label:'각패 미션(2인)',get:()=>opts.missions?'켬':'끔',values:[true,false],key:'missions'}
  ];
  function adjustSetting(delta){const s=settingList[settingIndex];const current=s.key==='ai0'?opts.aiLevels[0]:s.key==='ai1'?opts.aiLevels[1]:s.key?opts[s.key]:mode;const at=Math.max(0,s.values.indexOf(current));const v=s.values[(at+delta+s.values.length)%s.values.length];if(s.apply){confirmDiscard(`${modeLabel(v)} 바꿀까요?`,`${modeLabel(v)} 바꾸기`,()=>{s.apply(v);menu=true;applyTheme();renderSettings();save()},()=>{menu=true;renderSettings()});return}else if(s.key==='ai0'||s.key==='ai1'){opts.aiLevels[s.key==='ai0'?0:1]=v;g.options.aiLevels=opts.aiLevels.slice();}else{opts[s.key]=v;if(s.key==='back')opts.backCustom=true;if(s.key==='style'&&!opts.backCustom)opts.back=({'item-default':'1','item-2':'4','item-3':'6'})[v];if(s.key==='pointWon')g.options.pointWon=v;}
-  applyTheme();renderSettings();save()}
+  applyTheme();applySound();renderSettings();save();if(s.key==='sound'||s.key==='soundVolume')sfx('collect')}
  function renderSettings(){const image=(src,width)=>`<img src="${new URL(src,document.baseURI).href}" style="width:${width}px;height:auto;max-height:84px;object-fit:contain;border-radius:4px" alt="미리보기">`;
  const preview=`<div class="settingPreview">${image(asset(0),52)}${image(back(),52)}${image('assets/boards/'+opts.board+'.webp',112)}</div>`;
  const rows=settingList.map((it,i)=>`<div class="settingRow ${settingIndex===i?'settingActive':''}" data-setting-i="${i}"><span>${it.label}</span><b>${it.get()}</b></div>`).join('');
@@ -97,13 +99,25 @@
  function perform(action){if(locked||!g||onlinePaused)return false;if(online){const type=action?.type;if(type==='newRound'&&mySeat!==0)return false;const payload={...action,player:mySeat};if(!onlineSend)return false;onlineSend(payload);closeDialog();tapSelected=null;keyboardCursor=false;return true}tapSelected=null;const before=captureOrigins();const who=action.player??g.active;const ok=g.dispatch(action);if(!ok)return false;keyboardCursor=false;const evs=g.events.slice();if(['play','flip','bomb'].includes(action.type))freshTaken={};for(const ev of evs)if(ev.kind==='take'&&ev.ids?.length)freshTaken[ev.who]=ev.ids.slice();const label=names()[who]||'진행';const info=evs.map(ev=>({play:`낸 패 ${C[ev.id]?.month}월`,pair:ev.source==='flip'?'뒤집어서 짝':'낸 패로 짝',flip:`뒤집은 패 ${C[ev.id]?.month}월`,puk:'뻑! 3장 바닥',pukRecovery:ev.own?'자뻑':'뻑 회수',dealerResult:`선 정하기: 나 ${ev.mine}월 / 컴퓨터 ${ev.ai}월 → ${names()[ev.dealer]} 선`,dealerTie:'선 정하기 동률 · 다시 고르기',bonus:ev.id!==undefined?`보너스 ${ev.id===50?'삼피':'쌍피'} 획득`:'보너스',bonusHand:'손패 보너스 획득',take:ev.ids?.length?`획득 ${ev.ids.length}장`:null,end:'스톱',go:'고 선언',nagari:'나가리'}[ev.kind])).filter(Boolean).join(' → ');
  if(action.type==='newRound')setMessage('새 판 시작');else if(info){const line=`${label}: ${info}`;history.unshift(line);history=history.slice(0,70);setMessage(line)}else setMessage(action.type==='dealer'?'선 정하기 완료':`${label}: 진행`);
  if(g.phase==='ended'){try{localStorage.setItem('hwatu_wallet_'+mode,JSON.stringify(g.wallet));localStorage.setItem('hwatu_recent_'+mode,JSON.stringify(g.records.slice(0,20)))}catch(e){}}
- if(!window.__hwatuFast&&opts.speed!=='off'&&evs.length){locked=true;closeDialog();playSequence(evs,before).catch(err=>console.error('애니메이션',err)).finally(()=>{locked=false;render();scheduleAI()})}else{render();scheduleAI()}return true}
+ if(!window.__hwatuFast&&opts.speed!=='off'&&evs.length){locked=true;closeDialog();playSequence(evs,before,afterCounts(g)).catch(err=>console.error('애니메이션',err)).finally(()=>{locked=false;render();scheduleAI()})}else{if(evs.length)playSummary(evs,afterCounts(g));render();scheduleAI()}return true}
  const sleep=ms=>new Promise(r=>setTimeout(r,online&&document.hidden?0:ms));
  // A card that has flown stays where it landed (.landedCard) until it flies again or render() draws the turn's final screen;
  // otherwise it vanishes while the rest of the turn plays out on the previous screen. Its copy in the hand/field it left is
  // hidden for the same span so it is not seen twice; render() rebuilds those areas, which brings them back.
  function dropLanded(id){document.querySelectorAll('.landedCard').forEach(el=>{if(el.dataset.cardId===String(id))el.remove()});document.querySelectorAll(`[data-card-id="${id}"]:not(.movingCard)`).forEach(el=>{el.style.visibility='hidden'})}
  function clearLanded(){document.querySelectorAll('.landedCard').forEach(el=>el.remove())}
+ // Sound effects (js/sfx.js). Test automation (__hwatuFast) stays silent.
+ function sfx(name,delay){if(name&&!window.__hwatuFast)window.HwatuSfx?.play(name,delay)}
+ function applySound(){window.HwatuSfx?.setEnabled(opts.sound!==false);window.HwatuSfx?.setVolume(({low:.35,mid:.7,high:1})[opts.soundVolume]??.7)}
+ const EVENT_SOUND={deal:'deal',dealer:'dealer',dealerResult:'dealer',dealerTie:'dealer',nagari:'nagari',tong:'tong',flipBonus:'bonus',bonusHand:'bonus',lastPukCollected:'pukRecovery'};
+ const pairFollows=(events,index,source)=>events.slice(index+1).some(e=>e.kind==='pair'&&(e.source||'hand')===source);
+ // The engine has no events for 쪽·따닥·싹쓸이 (each just steals a pi), so tell them apart from the turn itself:
+ // field left empty with cards still in the deck = 싹쓸이; played and flipped cards of one month taking 4 = 따닥, 2 = 쪽.
+ function captureSound(events,after){const takes=events.filter(e=>e.kind==='take'&&e.ids?.length);if(!takes.length||events.some(e=>e.kind==='puk'))return null;if(after&&after.field===0&&after.deck>0)return 'sweep';const played=events.find(e=>e.kind==='play'),flipped=events.find(e=>e.kind==='flip');if(!played||!flipped||played.id>=48||flipped.id>=48||C[played.id].month!==C[flipped.id].month||events.some(e=>e.kind==='pukRecovery'))return null;const got=takes.flatMap(e=>e.ids||[]).filter(id=>id<48&&C[id].month===C[played.id].month).length;return got>=4?'ttadak':got===2?'jjok':null}
+ // With animations off one turn gets one sound: the most important thing that happened.
+ function summarySound(events,after){const has=kind=>events.find(e=>e.kind===kind&&(kind!=='take'||e.ids?.length));const end=has('end');if(end)return end.who===mySeat?'win':'lose';for(const kind of ['nagari','tong','bomb','shake','puk','pukRecovery'])if(has(kind))return EVENT_SOUND[kind]||kind;const special=captureSound(events,after);if(special)return special;const go=has('go');if(go)return go.n>=3?'go3':go.n===2?'go2':'go1';for(const [kind,name] of [['bonus','bonus'],['bonusHand','bonus'],['flipBonus','bonus'],['steal','steal'],['take','collect'],['flip','flip'],['play','play'],['dealerResult','dealer'],['deal','deal']])if(has(kind))return name;return null}
+ function playSummary(events,after){sfx(summarySound(events,after));if(events.some(e=>e.kind==='goPrompt'&&e.who===mySeat))sfx('turn',400)}
+ const afterCounts=view=>view?{field:view.field?.length??0,deck:Array.isArray(view.deck)?view.deck.length:(view.deck?.count??0)}:null;
  async function cardFlight(id,from,to,ms,backFirst=false){if(id===undefined||id===null||!from||!to)return;dropLanded(id);const ghost=document.createElement('img');ghost.className='movingCard';ghost.dataset.cardId=String(id);ghost.src=backFirst?back():asset(id);ghost.style.left=(from.x-26)+'px';ghost.style.top=(from.y-40)+'px';$('board').append(ghost);let landed=false;
  const reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
  try{if(online&&document.hidden)return;const anim=ghost.animate([{transform:'translate(0,0) scale(1)',opacity:.7},{transform:`translate(${to.x-from.x}px,${to.y-from.y}px) scale(1.08)`,opacity:1}],{duration:reduce?120:ms,easing:'ease-in-out',fill:'forwards'});if(backFirst){setTimeout(()=>{if(ghost.isConnected)ghost.src=asset(id)},Math.max(20,ms*.38))}await Promise.race([anim.finished.catch(()=>{}),sleep(ms+500)]);anim.cancel();ghost.src=asset(id);ghost.style.left=(to.x-26)+'px';ghost.style.top=(to.y-40)+'px';ghost.classList.add('landedCard');landed=true}catch(e){}finally{if(!landed)ghost.remove()}}
@@ -118,29 +132,30 @@
   const count=Object.keys(staged).length;
   return{x:empty.x+Math.min(count,2)*10,y:empty.y+Math.min(count,2)*4};
  }
- async function playSequence(events,before){const dur=opts.speed==='slow'?800:opts.speed==='quick'?280:500;skip=false;const center=position('#field')||position('#board');const sourceHand=w=>before.hand[w]||center;const destination=w=>before.caps[w]||center;
-  const staged={};
+ async function playSequence(events,before,after){const dur=opts.speed==='slow'?800:opts.speed==='quick'?280:500;skip=false;const center=position('#field')||position('#board');const sourceHand=w=>before.hand[w]||center;const destination=w=>before.caps[w]||center;
+  const staged={},special=captureSound(events,after),played=new Set();const sfxOnce=name=>{if(name&&!played.has(name)){played.add(name);sfx(name)}};
  for(const [eventIndex,ev] of events.entries()){ if(skip||(online&&document.hidden))break;const ms=dur;let notice='';switch(ev.kind){
- case 'play':notice=names()[ev.who]+' · 패 내기';{const target=landingFor(ev.id,'hand',events,eventIndex,before,staged);staged[String(ev.id)]=target;await cardFlight(ev.id,sourceHand(ev.who),target,ms,ev.who!==mySeat)}break;
+ case 'play':notice=names()[ev.who]+' · 패 내기';{const target=landingFor(ev.id,'hand',events,eventIndex,before,staged);staged[String(ev.id)]=target;await cardFlight(ev.id,sourceHand(ev.who),target,ms,ev.who!==mySeat);sfx(pairFollows(events,eventIndex,'hand')?'stack':'play')}break;
  case 'pair':notice=ev.source==='flip'?'뒤집어서 먹음':'낸 패로 먹음';callout(notice,ms);await sleep(ms);break;
- case 'flip':notice='더미 뒤집기';callout(notice,Math.round(ms*.8));await sleep(ms*.8);{const target=landingFor(ev.id,'flip',events,eventIndex,before,staged);staged[String(ev.id)]=target;await cardFlight(ev.id,before.deck,target,ms,true)}break;
- case 'take':for(const id of ev.first||[]){if(skip)break;callout('낸 패 짝 획득',ms);await cardFlight(id,before.field[String(id)]||staged[String(id)]||center,destination(ev.who),ms)}for(const id of ev.second||[]){if(skip)break;callout('뒤집은 패 짝 획득',ms);await cardFlight(id,before.field[String(id)]||staged[String(id)]||center,destination(ev.who),ms)}break;
- case 'steal':notice='피 빼앗기';callout(notice,ms);await cardFlight(ev.id,destination(ev.from),destination(ev.who),ms);break;
- case 'puk':notice='뻑! · '+C[ev.ids[0]].month+'월 3장';callout(notice,1250);await sleep(1250);break;
- case 'pukRecovery':notice=ev.own?'자뻑! 피 2장':'뻑 회수!';callout(notice,900);await sleep(900);break;
- case 'go':notice=names()[ev.who]+' '+ev.n+'고!';callout(notice,1100);await sleep(1100);break;
- case 'bomb':notice='폭탄!';callout(notice,850);await sleep(850);break;
- case 'shake':notice='흔들기!';callout(notice,800);await sleep(800);break;
- case 'end':notice=names()[ev.who]+' '+ev.points+'점 스톱!';callout(notice,1100);await sleep(1100);break;
- case 'bonus':notice='보너스!';callout(notice,700);await sleep(700);break;
- default:break;}
+ case 'flip':notice='더미 뒤집기';callout(notice,Math.round(ms*.8));await sleep(ms*.8);sfx('flip');{const target=landingFor(ev.id,'flip',events,eventIndex,before,staged);staged[String(ev.id)]=target;await cardFlight(ev.id,before.deck,target,ms,true);sfx(pairFollows(events,eventIndex,'flip')?'stack':'play')}break;
+ case 'take':if(ev.ids?.length)sfx('collect',Math.round(ms*.6));for(const id of ev.first||[]){if(skip)break;callout('낸 패 짝 획득',ms);await cardFlight(id,before.field[String(id)]||staged[String(id)]||center,destination(ev.who),ms)}for(const id of ev.second||[]){if(skip)break;callout('뒤집은 패 짝 획득',ms);await cardFlight(id,before.field[String(id)]||staged[String(id)]||center,destination(ev.who),ms)}sfxOnce(special);break;
+ case 'steal':notice='피 빼앗기';sfx('steal');callout(notice,ms);await cardFlight(ev.id,destination(ev.from),destination(ev.who),ms);break;
+ case 'puk':notice='뻑! · '+C[ev.ids[0]].month+'월 3장';sfx('puk');callout(notice,1250);await sleep(1250);break;
+ case 'pukRecovery':notice=ev.own?'자뻑! 피 2장':'뻑 회수!';sfxOnce('pukRecovery');callout(notice,900);await sleep(900);break;
+ case 'go':notice=names()[ev.who]+' '+ev.n+'고!';sfx(ev.n>=3?'go3':ev.n===2?'go2':'go1');callout(notice,1100);await sleep(1100);break;
+ case 'bomb':notice='폭탄!';sfx('bomb');callout(notice,850);await sleep(850);break;
+ case 'shake':notice='흔들기!';sfx('shake');callout(notice,800);await sleep(800);break;
+ case 'end':notice=names()[ev.who]+' '+ev.points+'점 스톱!';sfx(ev.who===mySeat?'win':'lose');callout(notice,1100);await sleep(1100);break;
+ case 'bonus':notice='보너스!';sfx('bonus');callout(notice,700);await sleep(700);break;
+ case 'goPrompt':if(ev.who===mySeat)sfx('turn');break;
+ default:if(ev.kind==='deal'&&played.has('dealer'))sfx('deal',700);else sfxOnce(EVENT_SOUND[ev.kind]);break;}
  if(skip)break;
  }
  $('callout').classList.remove('active');}
  function scheduleAI(){if(online)return;clearTimeout(aiHandle);if(locked||menu||!g||g.phase==='ended'||g.active===mySeat)return;aiHandle=setTimeout(()=>{if(!locked&&!menu&&g.active!==mySeat)perform(g.aiAction())},window.__hwatuFast?0:350)}
  function startGame(n=mode){if(online)return;settlementVisible=false;clearTimeout(aiHandle);mode=n;walletSeen=null;previousTurnKey=null;pendingTurnCallout=null;g=new Hwatu.Game({players:n,seed:Math.floor(Math.random()*4294967295),wallet:load('hwatu_wallet_'+n,null)||undefined,pointWon:opts.pointWon,startMoney:opts.startMoney,dealerHour:new Date().getHours(),bonus:opts.bonus,missions:opts.missions,aiLevels:opts.aiLevels});offlineStartWallet=g.wallet.slice();focus=0;keyboardCursor=false;tapSelected=null;locked=false;menu=false;confirmOpen=false;history=[];render();scheduleAI()}
  // Switching mode or starting over throws the round in progress away, so ask first. Nothing is lost while picking the dealer or after the result.
- function confirmDiscard(question,yesText,run,onCancel){if(online||!g||g.phase==='dealer'||g.phase==='ended'){run();return}menu=true;confirmOpen=true;const done=yes=>{confirmOpen=false;menu=false;if(yes){skip=true;run();return}if(onCancel)onCancel();else if(locked)closeDialog();else{render();scheduleAI()}};openDialog('진행 중인 판이 있습니다',`지금 판을 버리고 ${question}<br>이 판의 패와 점수는 남지 않습니다.${touchUI()?'':'<p>← → 로 고르고 Enter · Esc 계속하기</p>'}`,[{text:'계속하기',fn:()=>done(false)},{text:yesText,fn:()=>done(true)}]);dlgFocus=0;const buttons=Array.from($('dialogBtns').querySelectorAll('button'));buttons.forEach((b,i)=>b.classList.toggle('focus',i===0));buttons[0]?.focus({preventScroll:true})}
+ function confirmDiscard(question,yesText,run,onCancel){if(online||!g||g.phase==='dealer'||g.phase==='ended'){run();return}menu=true;confirmOpen=true;sfx('warning');const done=yes=>{confirmOpen=false;menu=false;if(yes){skip=true;run();return}if(onCancel)onCancel();else if(locked)closeDialog();else{render();scheduleAI()}};openDialog('진행 중인 판이 있습니다',`지금 판을 버리고 ${question}<br>이 판의 패와 점수는 남지 않습니다.${touchUI()?'':'<p>← → 로 고르고 Enter · Esc 계속하기</p>'}`,[{text:'계속하기',fn:()=>done(false)},{text:yesText,fn:()=>done(true)}]);dlgFocus=0;const buttons=Array.from($('dialogBtns').querySelectorAll('button'));buttons.forEach((b,i)=>b.classList.toggle('focus',i===0));buttons[0]?.focus({preventScroll:true})}
  function modeLabel(n){return n===2?'2인 맞고로':'3인 고스톱으로'}
  function switchMode(){if(online)return;const next=mode===2?3:2;confirmDiscard(`${modeLabel(next)} 바꿀까요?`,`${modeLabel(next)} 바꾸기`,()=>{menu=false;closeDialog();startGame(next)})}
  function chooseHandByIndex(i){const arr=g.hands[mySeat].slice().sort((a,b)=>C[a].month-C[b].month||a-b);if(arr[i]!==undefined)playCard(arr[i])}
@@ -159,8 +174,9 @@
  document.addEventListener('keydown',keys);
  [['styleSelect','style'],['backSelect','back'],['boardSelect','board'],['speedSelect','speed']].forEach(([id,key])=>$(id).onchange=e=>themeUpdate(key,e.target.value));
  $('captureToggle').onclick=()=>{mobileCapsOpen=!mobileCapsOpen;document.querySelector('.self').classList.toggle('captureCollapsed',!mobileCapsOpen);$('captureToggle').setAttribute('aria-expanded',String(mobileCapsOpen));$('captureToggle').textContent=mobileCapsOpen?'접기':'펼치기'};$('modeBtn').onclick=online?()=>settings():switchMode;$('configBtn').onclick=settings;$('historyBtn').onclick=()=>$('history').classList.toggle('hide');$('playBtn').onclick=()=>chooseHandByIndex(focus);$('flipBtn').onclick=()=>perform({type:'flip',player:0});$('deck').onclick=()=>$('flipBtn').click();$('goBtn').onclick=()=>perform({type:'go',player:0});$('stopBtn').onclick=()=>perform({type:'stop',player:0});$('shakeBtn').onclick=()=>perform({type:'shake',player:0});$('bombBtn').onclick=()=>perform({type:'bomb',player:0});$('nextBtn').onclick=()=>g.phase==='ended'?perform({type:'newRound',player:mySeat}):online?false:confirmDiscard('새 판을 시작할까요?','새 판 시작',()=>startGame(mode));document.querySelector('.onlineLink')?.addEventListener('click',e=>{if(e.button!==0||e.ctrlKey||e.metaKey||e.shiftKey)return;e.preventDefault();const href=e.currentTarget.href;confirmDiscard('온라인 대전으로 갈까요?','온라인 대전으로 가기',()=>{location.href=href})});
+ applySound();
  if(!online)startGame();
- function notify(message){const msg=String(message||'').trim();if(!msg)return;history.unshift(msg);history=history.slice(0,70);setMessage(msg);updateHistory();callout(msg,1650)}
+ function notify(message){const msg=String(message||'').trim();if(!msg)return;sfx(/연결 끊김/.test(msg)?'disconnect':/나갔습니다|내보내고/.test(msg)?'leave':/들어왔습니다|AI로 채웠습니다/.test(msg)?'join':null);history.unshift(msg);history=history.slice(0,70);setMessage(msg);updateHistory();callout(msg,1650)}
  function whenIdle(){return onlineProcessing||locked?new Promise(resolve=>onlineIdleWaiters.push(resolve)):Promise.resolve()}
  function onlineMessage(evs,snapshot){
   const label=w=>w===snapshot.seat?'나':snapshot.roster?.[w]?.name||`참가자 ${w+1}`;
@@ -185,7 +201,7 @@
    // Preserve the previous version's visible cards throughout its transition.
    // Never render a future snapshot before the earlier animation completes.
    const origins=changed?captureOrigins():null;
-   if(changed&&evs.length&&!next.skipAnimation&&!document.hidden&&opts.speed!=='off'&&!window.__hwatuFast){await playSequence(evs,origins||captureOrigins())}
+   if(changed&&evs.length&&!next.skipAnimation&&!document.hidden&&opts.speed!=='off'&&!window.__hwatuFast){await playSequence(evs,origins||captureOrigins(),afterCounts(snapshot.view))}else if(changed&&evs.length&&!next.skipAnimation)playSummary(evs,afterCounts(snapshot.view))
    onlineSnapshot=snapshot;mySeat=snapshot.seat;mode=snapshot.roster?.length||mode;onlineSend=next.send;onlinePaused=!!snapshot.paused;
    g=snapshot.view?makeFacade(snapshot.view):null;
    if(changed){onlineMessage(evs,snapshot);for(const ev of evs)if(ev.kind==='take'&&ev.ids?.length)freshTaken[ev.who]=ev.ids.slice()}
