@@ -1,0 +1,14 @@
+
+[hidden]{display:none!important}
+.onLobby{font-family:system-ui,sans-serif;background:#122727;color:#eee;position:fixed;inset:0;overflow:auto;padding:clamp(14px,5vw,44px);display:flex;flex-direction:column;align-items:center;gap:12px;z-index:90}
+.onLobby input,.onLobby select,.onLobby button,.onNet button,.onNet input,.onNet select{font:inherit;min-height:44px;border:1px solid #a98d51;border-radius:8px;padding:6px 10px;background:#243e36;color:#fff}
+.onLobby h1{font-size:clamp(20px,5vw,32px)}.onLobby label{display:flex;gap:8px;align-items:center}.onRow{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+#onlineRoom{position:fixed;inset:0;overflow:hidden}#onlineRoom .app{height:100dvh;max-height:100dvh}
+.onNet{position:fixed;z-index:80;right:6px;top:4px;display:flex;align-items:center;gap:7px;background:#162b26ee;border-radius:10px;padding:3px 6px;color:#fff;font:12px system-ui;max-width:min(97vw,700px)}
+.onNet #roomTitle{display:none}.onNet #roomInfo{max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.onNet button{min-height:30px;padding:2px 8px}.onNet #roomExpanded{position:absolute;right:0;top:100%;min-width:min(360px,94vw);padding:12px;background:#1a352b;border:1px solid #ab955d;border-radius:10px;box-shadow:0 10px 20px #0008;max-height:70vh;overflow-y:auto}.onNet #roster{margin:8px 0}.onNet #roster>div{padding:4px 0}
+#onlineRoom .onlineLink{display:none}
+@media(max-width:700px){.onNet{top:0;right:2px;max-width:130px;gap:1px;padding:2px;font-size:10px}.onNet #roomInfo{display:none}.onNet button{min-height:30px}.onNet #timer{font-size:10px}}
+@media(max-height:430px){.onNet{top:0;right:0}.onNet #roomExpanded{max-height:86vh}}
+
+/* Stage 10.6: room access sits between left mode and right settings on narrow devices. */
+@media(max-width:849px){.onNet{left:50%;right:auto;transform:translateX(-50%);top:1px;max-width:125px}}
