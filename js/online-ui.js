@@ -19,7 +19,7 @@
   hostLost=false;connectionBanner('');announce(reason||'방 연결이 종료됐습니다.',true);
  }
  function summaryOfLast(s){const view=s?.view,roster=s?.roster||[];const init=s?.startingWallet||Array(roster.length).fill(100000);return {partial:true,rounds:s?.finishedRounds||Math.max(0,(view?.round||0)-(view?.phase==='ended'?0:1)),nagari:s?.nagariRounds||0,people:roster.map((r,i)=>({seat:i,name:r.name,initial:init[i]??100000,final:view?.wallet?.[i]??init[i]??100000,change:(view?.wallet?.[i]??init[i]??100000)-(init[i]??100000),recharge:r.ai?(s?.recharges?.[i]||0):0}))}}
- function connectionBanner(message,reconnectingNow=false){const panel=$('connectionBanner');panel.hidden=!message||!snapshot?.view;if(message){$('connectionTitle').textContent=message;$('bannerReconnect').hidden=!reconnectingNow;$('bannerLeave').hidden=!reconnectingNow}}
+ function connectionBanner(message,reconnectingNow=false){const panel=$('connectionBanner');panel.hidden=!message||!snapshot?.view;if(snapshot&&!snapshot.view){$('waitReconnect').hidden=!(message&&reconnectingNow);$('waitStatus').textContent=message&&reconnectingNow?message:((snapshot.roster||[]).filter((r,i)=>i===0||r.connected||r.ai).length===snapshot.roster?.length?'모두 모였습니다 · 게임 시작':`${(snapshot.roster||[]).filter((r,i)=>i>0&&!r.connected&&!r.ai).length}명 더 기다리는 중 · 모두 들어오면 자동 시작`)}if(message){$('connectionTitle').textContent=message;$('bannerReconnect').hidden=!reconnectingNow;$('bannerLeave').hidden=!reconnectingNow}}
  function releaseHost(){++aiTicket;clearTimeout(aiTimer);const oldPeer=peer;peer=null;/* Allow terminal settlement messages to flush before PeerJS teardown. */if(oldPeer)setTimeout(()=>{try{oldPeer.destroy()}catch(e){}},1400);host=null;localStorage.removeItem('hwatu_online_host_v1');$('resume').hidden=true}
  function finishHost(){if(!host||host.game?.phase!=='ended')return;const summary=host.finishSession();releaseHost();backToLobby('대국이 종료됐습니다.');HwatuUI.showSettlement(summary,()=>{})}
  function leaveRoom(){if(host)return;cancelRetry();manualDisconnect=true;const c=client;if(c){c.leaveRoom();setTimeout(()=>{if(client===c)backToLobby('방에서 나갔습니다.')},1600)}else backToLobby('방에서 나갔습니다.')}
@@ -31,7 +31,7 @@
  function populateWaiting(s){const people=s.roster||[],present=people.filter((r,i)=>i===0||r.connected||r.ai).length,missing=people.length-present;
   $('waitMode').textContent=people.length===2?'2인 맞고':'3인 고스톱';$('waitRoomCode').textContent=s.roomCode;$('waitLink').value=urlForRoom(s.roomCode);
   const seats=$('waitRoster');seats.replaceChildren();people.forEach((r,i)=>{const line=document.createElement('div');line.className='onWaitingSeat';const dot=document.createElement('span');dot.className='onSeatDot';dot.textContent=i===0||r.connected||r.ai?'●':'○';const title=document.createElement('b');title.textContent=`${i+1}번 ${r.ai?r.name+' (AI)':r.connected?r.name:'빈자리'}${i===s.seat?' · 나':''}`;line.append(dot,title);if(host&&i>0&&!r.ai){const btn=document.createElement('button');btn.type='button';btn.textContent=r.connected?'AI로 교체…':'AI로 채우기';btn.onclick=()=>requestAI(i,r);line.append(btn)}seats.append(line)});
-  $('waitStatus').textContent=missing>0?`${missing}명 더 기다리는 중 · 모두 들어오면 자동 시작`:'모두 모였습니다 · 게임 시작';
+  $('waitReconnect').hidden=!hostLost;$('waitStatus').textContent=hostLost?'방장 연결이 끊겼습니다 · 다시 연결 중…':missing>0?`${missing}명 더 기다리는 중 · 모두 들어오면 자동 시작`:'모두 모였습니다 · 게임 시작';
   $('modeBtn').textContent=$('waitMode').textContent;$('name1').textContent=people.find((_,i)=>i!==s.seat)?.name||'빈자리';$('name2').textContent=people.find((_,i)=>i!==s.seat&&i!==1)?.name||'빈자리';$('message').textContent=noticeActive?latestNotice:'참가자를 기다리는 중';
  }
  function saveName(){const name=$('nickname').value.trim().slice(0,18)||'가족';localStorage.setItem(STORAGE_NAME,name);return name}
@@ -85,7 +85,7 @@
  $('reconnect').onclick=()=>{cancelRetry();joinRoom(false)};$('onlineReconnect').onclick=()=>{cancelRetry();if(host)host.broadcast();else joinRoom(false)};
  async function copyRoomLink(){const input=$('waitingRoom').hidden?$('shareUrl'):$('waitLink');try{await navigator.clipboard.writeText(input.value);announce('입장 링크 복사 완료')}catch(e){input.focus();input.select();try{document.execCommand('copy')}catch(_){}announce('입장 링크가 선택되었습니다. 복사해 주세요.')}}
  $('waitCopy').onclick=copyRoomLink;
- $('waitLeave').onclick=leaveRoom; $('bannerReconnect').onclick=()=>{clearTimeout(retryTimer);retryTimer=null;if(!reconnecting)joinRoom(true)}; $('bannerLeave').onclick=leaveRoom;
+ $('waitLeave').onclick=leaveRoom; $('waitReconnect').onclick=()=>{clearTimeout(retryTimer);retryTimer=null;if(!reconnecting)joinRoom(true)}; $('bannerReconnect').onclick=()=>{clearTimeout(retryTimer);retryTimer=null;if(!reconnecting)joinRoom(true)}; $('bannerLeave').onclick=leaveRoom;
  $('copyLink').onclick=copyRoomLink;
  $('roomToggle').onclick=()=>{const e=$('roomExpanded');e.hidden=!e.hidden;$('roomToggle').setAttribute('aria-expanded',String(!e.hidden))};
  $('hostControls').querySelectorAll('[data-ai]').forEach(b=>b.onclick=()=>requestAI(Number(b.dataset.ai)));
