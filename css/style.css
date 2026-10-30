@@ -189,3 +189,91 @@
 .sessionSettlement[hidden]{display:none!important}
 
 .sessionRecharge{grid-column:1/-1;color:#ffe2a0;text-align:right;font-size:12px}
+
+/* Stage 10.16: phone layout from a real-device report (412×718 in-app browser).
+   Captures were 14–22px and the 피 row was clipped while hand/floor cards and a
+   two-row 104px button bar took the space. Portrait now stacks the board in a
+   grid (opponents → floor → message → me) so every band gets its natural height
+   and the floor takes what is left. Capture cards keep their size and overlap
+   more as a group grows (each card shows its left edge, the newest one in full),
+   so a full capture set never leaves its box. */
+@media (max-width:849px){
+ .capture{display:flex;flex-direction:row;flex-wrap:wrap;align-content:flex-start;gap:2px 6px;overflow:hidden}
+ .capture .capGroup{flex:1 1 0;min-width:0;height:auto;min-height:0;gap:2px}
+ .capture .capLabel{flex:none;min-width:0;margin:0}
+ .capture .capCards{flex:1 1 auto;min-width:0;display:flex;align-items:flex-start;overflow:visible}
+ .capture .capCards img{--cap-w:22px;flex:0 1 var(--cap-w);width:var(--cap-w);min-width:3px;height:calc(var(--cap-w)*var(--ratio));margin:0;object-fit:cover;object-position:left top}
+ .capture .capCards img:last-child{flex-shrink:0}
+ .capture .capCards img:first-child{margin-left:0}
+}
+@media (max-width:849px) and (orientation:portrait){
+ .board{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) auto auto;grid-template-areas:"ea eb" "mid mid" "msg msg" "self self";gap:4px 8px;padding:3px 4px 2px}
+ /* .app prefix outranks the earlier absolute-layout rules, e.g. .enemyA:has(~.enemyB:not(.hide)){width:48%}. */
+ .app .board>.enemy,.app .board>.middle,.app .board>.self,.app .board>.message{position:relative;inset:auto;transform:none;width:auto;max-width:none;height:auto;min-height:0;margin:0}
+ .enemyA{grid-area:ea}.enemyB{grid-area:eb}
+ .board:has(>.enemyB.hide) .enemyA{grid-column:1/-1}
+ .enemy{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;column-gap:6px;row-gap:2px;padding:0}
+ .enemy>.strip{height:auto;min-height:24px}
+ .enemy .enemyHand,.enemyB .enemyHand{height:auto;justify-content:flex-start;overflow:hidden;padding:0}
+ .enemy .enemyHand .card{--card-w:15px;margin-right:-5px;border-width:1px;border-radius:3px}
+ .enemy .capture{grid-column:1/-1;height:auto}
+ .enemy .capGroup{height:auto;min-height:0}
+ .enemy .capLabel{font-size:10px}
+ .enemy .capture .capCards img{--cap-w:clamp(19px,3dvh,24px)}
+ .board:has(>.enemyB:not(.hide)) .enemy .capture .capCards img{--cap-w:clamp(16px,2.5dvh,20px)}
+ /* 광·열끗·띠 share the first row, 피 (usually the longest) gets its own row. */
+ .capture .capGroup:first-child{flex-grow:.75}
+ .capture .capGroup:last-child{flex:1 0 100%}
+ .middle{grid-area:mid;display:flex;flex-direction:column;overflow:visible}
+ .fieldHead{margin:0 46px 2px 0}
+ .field{flex:1;min-height:0;gap:4px;justify-content:center;align-content:center;padding:18px 46px 0 0}
+ .field .card{--card-w:38px;min-width:0;min-height:0}
+ .drawStack{top:50%;transform:translateY(-50%);width:42px}.drawStack .card{--card-w:36px}
+ .board>.message{grid-area:msg;height:22px;padding:2px 8px;line-height:16px}
+ .self{grid-area:self;display:flex;flex-direction:column}
+ .self>.strip:first-child{height:16px;min-height:0}
+ .self .captureLabel{font-size:11px;font-weight:600;color:#d5dccf}
+ .self .captureToggle{display:none!important}
+ .self.captureCollapsed .capture{display:flex}
+ .self .capture{flex:none;height:auto;min-height:0;max-height:none}
+ .self .capLabel{font-size:11px}
+ .self .capture .capCards img{--cap-w:clamp(26px,4.2dvh,34px)}
+ .self .handHead{height:28px;min-height:28px;margin:2px 0 0}
+ .myHand{height:auto;min-height:0;justify-content:center;align-items:flex-end;gap:1px;padding:7px 0 3px}
+ .myHand .card{width:auto;flex:0 1 46px;min-width:34px;max-width:46px}
+ /* One 44px row; buttons that cannot be used right now are hidden instead of greyed out. */
+ .actions{height:52px;min-height:52px;display:flex;gap:4px;padding:4px}
+ .actions button{flex:1 1 0;height:44px;min-width:0;font-size:12px}
+ .actions button:disabled{display:none}
+}
+/* Landscape phones: same grid idea with one line per band — opponent name, backs and
+   captures share a row; my captures are one row of four groups above my hand. */
+@media (max-width:849px) and (orientation:landscape){
+ .board{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) auto;grid-template-areas:"ea eb" "mid mid" "self self";gap:3px 10px;padding:2px 7% 0}
+ .app .board>.enemy,.app .board>.middle,.app .board>.self{position:relative;inset:auto;transform:none;width:auto;max-width:none;height:auto;min-height:0;margin:0}
+ .enemyA{grid-area:ea}.enemyB{grid-area:eb}
+ .board:has(>.enemyB.hide) .enemyA{grid-column:1/-1}
+ .enemy{display:grid;grid-template-columns:auto auto minmax(0,1fr);align-items:center;column-gap:8px;padding:0}
+ .enemy>.strip{height:auto;min-height:22px}
+ .enemy .enemyHand,.enemyB .enemyHand{height:auto;overflow:hidden;padding:0}
+ .enemy .enemyHand .card{--card-w:14px;margin-right:-5px;border-width:1px;border-radius:3px}
+ .enemy .capture{display:flex;height:auto}
+ .enemy .capGroup{height:auto;min-height:0}
+ .enemy .capLabel,.self .capLabel{font-size:9px}
+ .enemy .capture .capCards img{--cap-w:15px}
+ .board:has(>.enemyB:not(.hide)) .enemy{grid-template-columns:auto minmax(0,1fr)}
+ .board:has(>.enemyB:not(.hide)) .enemy .enemyHand{display:none}
+ .capture .capGroup:first-child{flex-grow:.75}
+ .capture .capGroup:last-child{flex-grow:1.6}
+ .middle{grid-area:mid;display:flex;flex-direction:column;overflow:visible}
+ .field{flex:1;min-height:0;align-items:center}
+ .drawStack{top:50%;transform:translateY(-50%)}
+ .self{grid-area:self;display:flex;flex-direction:column}
+ .self>.strip:first-child{display:none}
+ .self.captureCollapsed .capture{display:flex}
+ .self .capture{flex:none;height:auto;min-height:0;max-height:none}
+ .self .capture .capGroup{height:auto;min-height:0}
+ .self .capture .capCards img{--cap-w:18px}
+ .self .handHead{margin:2px 0 0}
+ .myHand{height:auto;min-height:0;padding:6px 4px 3px;justify-content:center}
+}
