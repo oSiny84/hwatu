@@ -277,3 +277,14 @@
  .self .handHead{margin:2px 0 0}
  .myHand{height:auto;min-height:0;padding:6px 4px 3px;justify-content:center}
 }
+
+/* Stage 10.17: on phones the button row only appears when there is something to press.
+   Cards are played by tapping them, the history panel is not needed there, and
+   "새 판" only shows once a round has ended (body[data-phase] is set by render()). */
+@media (max-width:849px){
+ .actions #playBtn,.actions #historyBtn{display:none}
+ body:not([data-phase="ended"]) .actions #nextBtn{display:none}
+ .actions button:disabled{display:none}
+ body:not([data-phase="ended"]) .actions:not(:has(>button:not(:disabled):not([hidden]):not(#playBtn):not(#historyBtn):not(#nextBtn))),
+ body[data-phase="ended"] .actions:not(:has(>button:not(:disabled):not([hidden]):not(#playBtn):not(#historyBtn))){display:none}
+}
