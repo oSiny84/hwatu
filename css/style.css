@@ -288,3 +288,9 @@
  body:not([data-phase="ended"]) .actions:not(:has(>button:not(:disabled):not([hidden]):not(#playBtn):not(#historyBtn):not(#nextBtn))),
  body[data-phase="ended"] .actions:not(:has(>button:not(:disabled):not([hidden]):not(#playBtn):not(#historyBtn))){display:none}
 }
+/* Stage 10.19: on phones the call-out and turn label stay above cards in flight (cards fly under the text).
+   js/ui.js placeCallout() puts the call-out between the turn label and the floor cards. */
+@media (max-width:849px){
+ .middle .fieldHead #activeLabel{z-index:45}
+ .callout{z-index:46}
+}
