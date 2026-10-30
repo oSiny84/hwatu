@@ -294,3 +294,19 @@
  .middle .fieldHead #activeLabel{z-index:45}
  .callout{z-index:46}
 }
+/* Stage 10.20: 3인 on a phone held upright — the two opponents' captured cards were 16–20px wide while the floor had
+   empty rows. Grow them (27px at 412×718, 23px at 360 wide); the floor row gives up the height. The width cap keeps
+   a pile of every card still inside each opponent's half-width box. */
+@media (max-width:849px) and (orientation:portrait){
+ .board:has(>.enemyB:not(.hide)) .enemy .capture .capCards img{--cap-w:clamp(16px,min(3.8dvh,6.5vw),30px)}
+}
+/* Stage 10.20: phone held sideways — the strip between the turn label and the floor cards is only 25–60px, so the
+   call-out text is smaller there; when even that does not fit, js/ui.js placeCallout() sets .onLabel and the call-out
+   covers the turn label's spot (label hidden meanwhile) instead of the floor cards. */
+@media (max-width:849px) and (orientation:landscape){
+ .callout{font-size:17px}
+}
+@media (max-width:849px){
+ .callout.onLabel{background:#143b2eee;border:1px solid #f8d08488;border-radius:8px;padding:1px 12px}
+ .board:has(>.callout.onLabel.active) #activeLabel{visibility:hidden}
+}
