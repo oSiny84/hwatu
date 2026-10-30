@@ -310,3 +310,12 @@
  .callout.onLabel{background:#143b2eee;border:1px solid #f8d08488;border-radius:8px;padding:1px 12px}
  .board:has(>.callout.onLabel.active) #activeLabel{visibility:hidden}
 }
+/* Stage 10.21: 3인 on a phone held sideways — 10.16 hid the two opponents' card backs to fit one row, which also
+   left the fly-in with no visible origin (a hidden element measures 0×0 at the top-left corner). Give each
+   opponent two rows: name strip + backs, then captures. */
+@media (max-width:849px) and (orientation:landscape){
+ .board:has(>.enemyB:not(.hide)) .enemy{grid-template-columns:auto minmax(0,1fr);grid-template-areas:"strip hand" "cap cap";row-gap:1px}
+ .board:has(>.enemyB:not(.hide)) .enemy>.strip{grid-area:strip}
+ .board:has(>.enemyB:not(.hide)) .enemy .enemyHand{display:flex;grid-area:hand;justify-content:flex-start;padding:0}
+ .board:has(>.enemyB:not(.hide)) .enemy .capture{grid-area:cap}
+}
