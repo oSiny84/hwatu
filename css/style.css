@@ -319,3 +319,14 @@
  .board:has(>.enemyB:not(.hide)) .enemy .enemyHand{display:flex;grid-area:hand;justify-content:flex-start;padding:0}
  .board:has(>.enemyB:not(.hide)) .enemy .capture{grid-area:cap}
 }
+/* Stage 10.22: phones are portrait-only. Held sideways the in-app browser leaves about 935×255 CSS px, too little
+   for opponents, floor and hand (10.21 at that size: floor cards drawn over my captures). js/ui.js marks a touch
+   device with body.touchDevice; a narrow desktop window keeps the sideways layout. Keyed on height, not width:
+   a phone held sideways is 850-1000px wide (past the phone breakpoint, so it was getting the desktop layout)
+   but under 500px tall; a tablet held sideways is taller and keeps playing. */
+.rotateNotice{display:none}
+@media (orientation:landscape) and (max-height:500px){
+ body.touchDevice .rotateNotice{position:fixed;inset:0;z-index:300;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:#0b2b27f4;color:#ffe8ac;text-align:center;font-size:20px;font-weight:800;padding:16px}
+ .rotateNotice .rotateIcon{font-size:44px;line-height:1}
+ .rotateNotice small{font-size:13px;color:#d5dccf;font-weight:500}
+}
